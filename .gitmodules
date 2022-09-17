@@ -1,0 +1,6 @@
+[submodule "ProdCast/vendor/imgui"]
+	path = ProdCast/vendor/imgui
+	url = https://github.com/TheCherno/imgui
+[submodule "ProdCast/vendor/glfw"]
+	path = ProdCast/vendor/glfw
+	url = https://github.com/glfw/glfw
