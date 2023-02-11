@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.32804.182
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProdCast", "ProdCast\ProdCast.vcxproj", "{40BF5E9F-7C42-4B67-8254-0A87E82FEE99}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrogCast", "FrogCast\FrogCast.vcxproj", "{D6B119CF-D774-41C6-A6D2-DBC0A57A885B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40BF5E9F-7C42-4B67-8254-0A87E82FEE99}.Debug|x64.ActiveCfg = Debug|x64
+		{40BF5E9F-7C42-4B67-8254-0A87E82FEE99}.Debug|x64.Build.0 = Debug|x64
+		{40BF5E9F-7C42-4B67-8254-0A87E82FEE99}.Release|x64.ActiveCfg = Release|x64
+		{40BF5E9F-7C42-4B67-8254-0A87E82FEE99}.Release|x64.Build.0 = Release|x64
+		{D6B119CF-D774-41C6-A6D2-DBC0A57A885B}.Debug|x64.ActiveCfg = Debug|x64
+		{D6B119CF-D774-41C6-A6D2-DBC0A57A885B}.Debug|x64.Build.0 = Debug|x64
+		{D6B119CF-D774-41C6-A6D2-DBC0A57A885B}.Release|x64.ActiveCfg = Release|x64
+		{D6B119CF-D774-41C6-A6D2-DBC0A57A885B}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CBCE0C33-E60A-4E45-BB65-BA048782BAB5}
+	EndGlobalSection
+EndGlobal
