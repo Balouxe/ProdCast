@@ -3,6 +3,7 @@
 #include "backends/AudioBackend.h"
 #include "AudioThread.h"
 #include "AudioTrack.h"
+#include "AudioBus.h"
 #include "RingBuffer.h"
 
 #include <string>
@@ -27,10 +28,13 @@ namespace ProdCast {
 
 		// PRIVATE INTERFACE
 
-		RingBuffer* getRingBuffer() { return m_ringBuffer; };
+		inline RingBuffer* getRingBuffer() { return m_ringBuffer; }
 		inline ThreadPool* getPool() const { return m_threadPool; }
+		inline AudioBus* getMasterBus() { return m_masterBus; }
 
 		int AudioCallback(float* outputBuffer, float* inputBuffer, unsigned long frameCount);
+
+		void RenderBuffer();
 
 		inline void lockAudioMutex() {	m_audioMutex.lock(); }
 		inline void unlockAudioMutex() { m_audioMutex.unlock(); }
@@ -39,13 +43,12 @@ namespace ProdCast {
 		std::mutex m_audioMutex;
 		ThreadPool* m_threadPool;
 		AudioBackend* m_backend;
+		AudioBus* m_masterBus;
 		
 		AudioSettings m_audioSettings;
-		unsigned int m_inputChannels;
-		unsigned int m_outputChannels;
 
 		RingBuffer* m_ringBuffer;
-		std::vector<AudioTrack*> m_tracks;
+		float* m_buffer;
 
 		float m_masterGain;	
 

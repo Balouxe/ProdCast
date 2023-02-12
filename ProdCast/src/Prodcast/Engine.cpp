@@ -33,10 +33,17 @@ namespace ProdCast {
 		}
 		m_backend->Init(&m_audioSettings, this);
 
-		m_ringBuffer = new RingBuffer(m_audioSettings.bufferSize * m_audioSettings.outputChannels, m_audioSettings.sampleRate);
+		m_ringBuffer = new RingBuffer(&m_audioSettings);
+
+		m_masterBus = new AudioBus(this, true);
 
 		m_threadPool = new ThreadPool();
 		m_threadPool->InitPool(1);
+
+		m_buffer = new float[m_audioSettings.bufferSize * m_audioSettings.outputChannels];
+		for (int i = 0; i < m_audioSettings.bufferSize * m_audioSettings.outputChannels; i++) {
+			m_buffer[i] = 0.0f;
+		}
 
 		isInit = true;
 	}
@@ -50,31 +57,29 @@ namespace ProdCast {
 		delete m_ringBuffer;
 	}
 
-	void ProdCastEngine::AddAudioTrack(AudioTrack* source) {
-		m_tracks.push_back(source);
-	}
-
 	int ProdCastEngine::AudioCallback(float* outputBuffer, float* inputBuffer, unsigned long framesCount) {
 		if (!isInit)
 			return 0;
 		float* out = (float*)outputBuffer;
 		float* in = (float*)inputBuffer;
-		unsigned long i;
 		
-		lockAudioMutex();
 		m_ringBuffer->Read(out);
 
-		for (i = 0; i < framesCount * m_audioSettings.outputChannels; i++) {
-			
-			out[i] = std::min(std::max(out[i] * m_masterGain, -1.0f), 1.0f);
-		}
-		unlockAudioMutex();
-
-		for (i = 0; i < m_tracks.size(); i++) {
-			m_threadPool->addJob(m_tracks[i]);
-		}
-
+		m_threadPool->addJob(m_masterBus);
+		
 		return 0;
+	}
+
+	void ProdCastEngine::RenderBuffer() {
+		unsigned long i;
+
+		float* buffer = m_masterBus->GetBuffer();
+
+		for (i = 0; i < m_audioSettings.bufferSize * m_audioSettings.outputChannels; i++) {
+			m_buffer[i] = std::min(std::max(buffer[i] * m_masterGain, -1.0f), 1.0f);
+		}
+
+		m_ringBuffer->Write(m_buffer);
 	}
 
 	// Setters / Getters

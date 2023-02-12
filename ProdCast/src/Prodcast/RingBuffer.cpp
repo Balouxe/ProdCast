@@ -3,11 +3,11 @@
 
 namespace ProdCast {
 
-	RingBuffer::RingBuffer(unsigned int sampleSize, unsigned int sampleRate) {
+	RingBuffer::RingBuffer(AudioSettings* settings) {
 		m_readPos = 0;
-		m_writePos = 2;
-		m_sampleSize = sampleSize;
-		m_bufferCapacity = int(sampleRate / sampleSize);
+		m_writePos = settings->headRoom;
+		m_sampleSize = settings->bufferSize * settings->outputChannels;
+		m_bufferCapacity = int(settings->sampleRate / m_sampleSize);
 		
 		m_buffer = new float[m_bufferCapacity * m_sampleSize];
 		for (int i = 0; i < m_bufferCapacity * m_sampleSize; i++) {

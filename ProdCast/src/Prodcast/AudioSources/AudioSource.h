@@ -12,7 +12,7 @@ namespace ProdCast {
 
 		void Play() override;
 
-		virtual void Process();
+		void Process();
 		void GetNextSamples(float* buffer, unsigned int samplesToGo, unsigned int nbChannels);
 
 		void LoadFile(std::filesystem::path path);

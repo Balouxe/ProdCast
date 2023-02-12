@@ -31,6 +31,7 @@ namespace ProdCast {
 		unsigned int bufferSize = 512;
 		int inputChannels = -1;
 		int outputChannels = -1;
+		unsigned int headRoom = 4;
 		Backends audioBackend = BE_PORTAUDIO;
 	};
 

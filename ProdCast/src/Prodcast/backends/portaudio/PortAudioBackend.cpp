@@ -11,14 +11,15 @@ namespace ProdCast {
 		settings->outputChannels = m_outputParameters.channelCount;
 		m_outputParameters.hostApiSpecificStreamInfo = NULL;
 		m_outputParameters.sampleFormat = paFloat32;
-		m_outputParameters.suggestedLatency = Pa_GetDeviceInfo(m_outputParameters.device)->defaultHighOutputLatency;
-
+		m_outputParameters.suggestedLatency = Pa_GetDeviceInfo(m_outputParameters.device)->defaultLowOutputLatency;
+		settings->headRoom = (settings->sampleRate / settings->bufferSize) * m_outputParameters.suggestedLatency;
+		
 		m_inputParameters.device = Pa_GetDefaultInputDevice();
 		m_inputParameters.channelCount = Pa_GetDeviceInfo(m_inputParameters.device)->maxInputChannels;
 		settings->inputChannels = m_inputParameters.channelCount;
 		m_inputParameters.hostApiSpecificStreamInfo = NULL;
 		m_inputParameters.sampleFormat = paFloat32;
-		m_inputParameters.suggestedLatency = Pa_GetDeviceInfo(m_inputParameters.device)->defaultHighInputLatency;
+		m_inputParameters.suggestedLatency = Pa_GetDeviceInfo(m_inputParameters.device)->defaultLowInputLatency;
 
 		if (Pa_OpenStream(&m_stream, &m_inputParameters, &m_outputParameters, settings->sampleRate, settings->bufferSize, 0, RenderPortAudio, (void*)engine) != 0)
 		{

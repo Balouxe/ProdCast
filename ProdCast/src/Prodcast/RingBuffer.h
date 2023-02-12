@@ -8,7 +8,7 @@ namespace ProdCast {
 	// maybe do template one day ?
 	class RingBuffer {
 	public:
-		RingBuffer(unsigned int sampleSize, unsigned int sampleRate);
+		RingBuffer(AudioSettings* settings);
 		~RingBuffer();
 
 		void Write(float* writeBuffer);

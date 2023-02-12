@@ -59,6 +59,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -80,6 +81,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -96,6 +98,8 @@
   <ItemGroup>
     <ClCompile Include="src\Prodcast\AudioBus.cpp" />
     <ClCompile Include="src\Prodcast\AudioSources\AudioSource.cpp" />
+    <ClCompile Include="src\Prodcast\AudioSources\flac\Flac.cpp" />
+    <ClCompile Include="src\Prodcast\AudioSources\mp3\Mp3.cpp" />
     <ClCompile Include="src\Prodcast\RingBuffer.cpp" />
     <ClCompile Include="src\Prodcast\AudioSources\wav\Wav.cpp" />
     <ClCompile Include="src\Prodcast\AudioThread.cpp" />
@@ -109,6 +113,8 @@
     <ClInclude Include="src\Prodcast\AudioBus.h" />
     <ClInclude Include="src\Prodcast\AudioSources\AudioSource.h" />
     <ClInclude Include="src\ProdCast.h" />
+    <ClInclude Include="src\Prodcast\AudioSources\flac\Flac.h" />
+    <ClInclude Include="src\Prodcast\AudioSources\mp3\Mp3.h" />
     <ClInclude Include="src\Prodcast\AudioSources\wav\Wav.h" />
     <ClInclude Include="src\Prodcast\AudioThread.h" />
     <ClInclude Include="src\Prodcast\AudioTrack.h" />

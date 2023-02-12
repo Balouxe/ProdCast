@@ -5,33 +5,29 @@
 
 #include <mutex>
 #include <vector>
+#include <unordered_map>
 
 namespace ProdCast {
 
 	class PC_API AudioBus : public AudioTrack {
 	public:
 		AudioBus(ProdCastEngine* engine);
+		AudioBus(ProdCastEngine* engine, bool isMaster);
 		~AudioBus();
 
-		void setParent(AudioTrack* parent);
+		void GetNextSamples(float* buffer, unsigned int samplesToGo, unsigned int nbChannels);
 
-		bool LoadWavFile(const char* file);
-		void Play();
+		uint16_t AddTrack(AudioTrack* track);
+		void RemoveTrack(uint16_t handle);
 
-		void GetNextSamples(unsigned int samplesToGo, unsigned int nbChannels);
-
-		// Necessary for ThreadableJob
 		void Process();
 	private:
-		AudioTrack* m_parent;
+		std::unordered_map<uint16_t, AudioTrack*> m_tracks;
+		uint16_t m_mapPosition = 0;
 
-		std::vector<AudioTrack*> m_tracks;
+		bool m_isMaster = false;
 
-		unsigned int m_numChannels;
-		uint32_t m_sampleRate;
-
-		AudioSettings* m_settings;
-		ProdCastEngine* m_engine;
+		std::shared_mutex m_mutex;
 	};
 
 }

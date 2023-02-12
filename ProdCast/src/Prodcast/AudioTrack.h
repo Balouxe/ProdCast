@@ -2,16 +2,16 @@
 #include "Core.h"
 #include "AudioThread.h"
 
-
 namespace ProdCast {
 	class ProdCastEngine;
+	class AudioBus;
 
 	class PC_API AudioTrack : public ThreadableJob {
 	public:
 		AudioTrack();
 		~AudioTrack();
-
-		void setParent(AudioTrack* parent);
+		
+		void setParent(AudioBus* parent);
 
 		inline float* GetBuffer() { return m_buffer; };
 
@@ -26,7 +26,8 @@ namespace ProdCast {
 
 		virtual void Process() = 0;
 	protected:
-		AudioTrack* m_parent;
+		AudioBus* m_parent;
+		uint16_t m_busHandle;
 
 		ProdCastEngine* m_engine;
 		AudioSettings* m_settings;
