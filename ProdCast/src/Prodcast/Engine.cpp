@@ -1,7 +1,7 @@
 #include "Engine.h"
-#include "Utils/Logger.h"
-#include "backends/sdl/SDLBackend.h"
-#include "backends/portaudio/PortAudioBackend.h"
+#include "Logger.h"
+#include "Backends/SDLBackend.h"
+#include "Backends/PortAudioBackend.h"
 
 #include <iostream>
 

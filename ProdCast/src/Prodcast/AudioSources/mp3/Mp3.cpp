@@ -1,6 +1,6 @@
-#include "Mp3.h"
-#include "Prodcast/Engine.h"
-#include "Prodcast/utils/Logger.h"
+#include "AudioSources/Mp3.h"
+#include "Engine.h"
+#include "Logger.h"
 
 #define DR_MP3_IMPLEMENTATION
 #include "dr_mp3.h"

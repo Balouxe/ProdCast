@@ -58,7 +58,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -80,7 +80,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -110,21 +110,21 @@
     <ClCompile Include="src\Prodcast\Utils\Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Prodcast\AudioBus.h" />
-    <ClInclude Include="src\Prodcast\AudioSources\AudioSource.h" />
-    <ClInclude Include="src\ProdCast.h" />
-    <ClInclude Include="src\Prodcast\AudioSources\flac\Flac.h" />
-    <ClInclude Include="src\Prodcast\AudioSources\mp3\Mp3.h" />
-    <ClInclude Include="src\Prodcast\AudioSources\wav\Wav.h" />
-    <ClInclude Include="src\Prodcast\AudioThread.h" />
-    <ClInclude Include="src\Prodcast\AudioTrack.h" />
-    <ClInclude Include="src\Prodcast\backends\portaudio\PortAudioBackend.h" />
-    <ClInclude Include="src\Prodcast\Engine.h" />
-    <ClInclude Include="src\Prodcast\backends\AudioBackend.h" />
-    <ClInclude Include="src\Prodcast\backends\sdl\SDLBackend.h" />
-    <ClInclude Include="src\Prodcast\Core.h" />
-    <ClInclude Include="src\Prodcast\RingBuffer.h" />
-    <ClInclude Include="src\Prodcast\Utils\Logger.h" />
+    <ClInclude Include="include\AudioBus.h" />
+    <ClInclude Include="include\AudioSource.h" />
+    <ClInclude Include="include\ProdCast.h" />
+    <ClInclude Include="include\AudioSources\Flac.h" />
+    <ClInclude Include="include\AudioSources\Mp3.h" />
+    <ClInclude Include="include\AudioSources\Wav.h" />
+    <ClInclude Include="include\AudioThread.h" />
+    <ClInclude Include="include\AudioTrack.h" />
+    <ClInclude Include="include\Backends\PortAudioBackend.h" />
+    <ClInclude Include="include\Engine.h" />
+    <ClInclude Include="include\AudioBackend.h" />
+    <ClInclude Include="include\Backends\SDLBackend.h" />
+    <ClInclude Include="include\Core.h" />
+    <ClInclude Include="include\RingBuffer.h" />
+    <ClInclude Include="include\Logger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

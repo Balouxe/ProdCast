@@ -13,7 +13,7 @@ namespace ProdCast {
 		m_volume = 1.0f;
 		m_pan = 0.0f;
 		setPan(0.0f);
-		m_isPlaying = true;
+		m_isMuted = false;
 	}
 
 	AudioTrack::~AudioTrack() {
@@ -44,11 +44,11 @@ namespace ProdCast {
 		return m_pan;
 	}
 
-	void AudioTrack::Play() {
-		m_isPlaying = true;
+	void AudioTrack::Mute() {
+		m_isMuted = true;
 	}
 
-	void AudioTrack::Stop() {
-		m_isPlaying = false;
+	void AudioTrack::Unmute() {
+		m_isMuted = false;
 	}
 }

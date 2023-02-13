@@ -1,9 +1,9 @@
 #include "AudioSource.h"
-#include "Prodcast/Engine.h"
+#include "Engine.h"
 
-#include "wav/Wav.h"
-#include "mp3/Mp3.h"
-#include "flac/Flac.h"
+#include "AudioSources/Wav.h"
+#include "AudioSources/Mp3.h"
+#include "AudioSources/Flac.h"
 
 namespace ProdCast {
 	AudioSource::AudioSource(ProdCastEngine* engine) {
@@ -31,8 +31,12 @@ namespace ProdCast {
 			m_isPlaying = true;
 	}
 
+	void AudioSource::Stop() {
+		m_isPlaying = false;
+	}
+
 	void AudioSource::Process() {
-		if (!m_isPlaying)
+		if (m_isMuted || !m_isLoaded)
 			return;
 
 		float* buffer = m_parent ? m_parent->GetBuffer() : nullptr;
@@ -48,20 +52,21 @@ namespace ProdCast {
 				*temp++ = 0.0f;
 				continue;
 			}
-
-			if (m_numChannels == 1 && nbChannels == 1) {
-				m_buffer[i] = m_audioData[m_position++] * m_volume;
-			}
-			else if (m_numChannels == 1 && nbChannels == 2) {
-				m_buffer[i] = m_audioData[m_position] * m_volume * m_gainLeft;
-				m_buffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight;
-			}
-			else if (m_numChannels == 2 && nbChannels == 2) {
-				m_buffer[i] = m_audioData[m_position++] * m_volume * m_gainLeft;
-				m_buffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight;
-			}
-			else if (m_numChannels == 2 && nbChannels == 1) {
-				m_buffer[i] = (m_audioData[m_position++] * m_gainLeft + m_audioData[m_position++] * m_gainRight) / 2 * m_volume;
+			else {
+				if (m_numChannels == 1 && nbChannels == 1) {
+					m_buffer[i] = m_audioData[m_position++] * m_volume;
+				}
+				else if (m_numChannels == 1 && nbChannels == 2) {
+					m_buffer[i] = m_audioData[m_position] * m_volume * m_gainLeft;
+					m_buffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight;
+				}
+				else if (m_numChannels == 2 && nbChannels == 2) {
+					m_buffer[i] = m_audioData[m_position++] * m_volume * m_gainLeft;
+					m_buffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight;
+				}
+				else if (m_numChannels == 2 && nbChannels == 1) {
+					m_buffer[i] = (m_audioData[m_position++] * m_gainLeft + m_audioData[m_position++] * m_gainRight) / 2 * m_volume;
+				}
 			}
 
 			// m_processingChain->ProcessBuffer(buffer, nbSamples, nbChannels); or something
@@ -94,6 +99,12 @@ namespace ProdCast {
 			if (Flac::LoadFlacFile(path, &m_audioData, &m_numChannels, &m_sampleRate, &m_length)) {
 				m_isLoaded = true;
 			}
+		}
+	}
+	
+	void AudioSource::LoadFileCustom(std::filesystem::path path, bool (*loader)(std::filesystem::path&, float**, unsigned int*, unsigned int*, uint64_t*)) {
+		if (loader(path, &m_audioData, &m_numChannels, &m_sampleRate, &m_length)) {
+			m_isLoaded = true;
 		}
 	}
 

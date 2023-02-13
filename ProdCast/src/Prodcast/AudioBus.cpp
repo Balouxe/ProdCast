@@ -1,5 +1,5 @@
 #include "AudioBus.h"
-#include "Utils/Logger.h"
+#include "Logger.h"
 
 namespace ProdCast {
 	AudioBus::AudioBus(ProdCastEngine* engine) {
@@ -39,6 +39,8 @@ namespace ProdCast {
 	}
 
 	void AudioBus::GetNextSamples(float* buffer, unsigned int samplesToGo, unsigned int nbChannels) {
+		if (m_isMuted)
+			return;
 		for (auto& track : m_tracks) {
 			track.second->Process();
 		}

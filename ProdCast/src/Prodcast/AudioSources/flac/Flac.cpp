@@ -1,6 +1,6 @@
-#include "Flac.h"
-#include "Prodcast/Engine.h"
-#include "Prodcast/utils/Logger.h"
+#include "AudioSources/Flac.h"
+#include "Engine.h"
+#include "Logger.h"
 
 #define DR_FLAC_IMPLEMENTATION
 #include "dr_flac.h"

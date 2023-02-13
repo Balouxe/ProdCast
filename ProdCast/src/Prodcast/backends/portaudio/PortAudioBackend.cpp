@@ -1,4 +1,4 @@
-#include "PortAudioBackend.h"
+#include "Backends/PortAudioBackend.h"
 
 #include <iostream>
 
@@ -7,7 +7,7 @@ namespace ProdCast {
 		Pa_Initialize();
 
 		m_outputParameters.device = Pa_GetDefaultOutputDevice();
-		m_outputParameters.channelCount = Pa_GetDeviceInfo(m_outputParameters.device)->maxOutputChannels;
+		m_outputParameters.channelCount = 2; // to fix
 		settings->outputChannels = m_outputParameters.channelCount;
 		m_outputParameters.hostApiSpecificStreamInfo = NULL;
 		m_outputParameters.sampleFormat = paFloat32;

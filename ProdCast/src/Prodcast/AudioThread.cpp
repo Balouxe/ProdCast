@@ -1,6 +1,6 @@
 #include "AudioThread.h"
 
-#include "Utils/Logger.h"
+#include "Logger.h"
 
 #include <thread>
 #include <chrono>
