@@ -46,6 +46,10 @@ namespace ProdCast {
 		}
 
 		if (buffer) {
+			if (m_processingChain) {
+				m_processingChain->ProcessBuffer(buffer, samplesToGo, nbChannels);
+			}
+
 			for (unsigned int i = 0; i < samplesToGo * nbChannels; i += nbChannels) {
 				if (nbChannels == 1) {
 					buffer[i] = m_buffer[i] * m_volume;

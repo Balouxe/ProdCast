@@ -75,6 +75,9 @@ namespace ProdCast {
 
 		float* buffer = m_masterBus->GetBuffer();
 
+		if(m_masterBus->getProcessingChain())
+			m_masterBus->getProcessingChain()->ProcessBuffer(buffer, m_audioSettings.bufferSize, m_audioSettings.outputChannels);
+
 		for (i = 0; i < m_audioSettings.bufferSize * m_audioSettings.outputChannels; i++) {
 			m_buffer[i] = std::min(std::max(buffer[i] * m_masterGain, -1.0f), 1.0f);
 		}

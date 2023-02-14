@@ -69,14 +69,14 @@ namespace ProdCast {
 				}
 			}
 
-			// m_processingChain->ProcessBuffer(buffer, nbSamples, nbChannels); or something
-			// m_position += m_numChannels;
-
 			if (m_position > m_length) {
 				m_position = 0;
 				m_isPlaying = false;
 			}
 		}
+
+		if (m_processingChain)
+			m_processingChain->ProcessBuffer(m_buffer, nbSamples, nbChannels);
 
 		for (i = 0; i < nbSamples * nbChannels; i++) {
 			buffer[i] += m_buffer[i];

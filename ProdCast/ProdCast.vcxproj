@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -58,7 +58,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk\public.sdk\source\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -80,7 +80,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SDL)\include;$(SolutionDir)ProdCast\src\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk\public.sdk\source\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -96,22 +96,32 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Prodcast\AudioBus.cpp" />
-    <ClCompile Include="src\Prodcast\AudioSources\AudioSource.cpp" />
-    <ClCompile Include="src\Prodcast\AudioSources\flac\Flac.cpp" />
-    <ClCompile Include="src\Prodcast\AudioSources\mp3\Mp3.cpp" />
-    <ClCompile Include="src\Prodcast\RingBuffer.cpp" />
-    <ClCompile Include="src\Prodcast\AudioSources\wav\Wav.cpp" />
-    <ClCompile Include="src\Prodcast\AudioThread.cpp" />
-    <ClCompile Include="src\Prodcast\AudioTrack.cpp" />
-    <ClCompile Include="src\Prodcast\backends\portaudio\PortAudioBackend.cpp" />
-    <ClCompile Include="src\Prodcast\Engine.cpp" />
-    <ClCompile Include="src\Prodcast\backends\sdl\SDLBackend.cpp" />
-    <ClCompile Include="src\Prodcast\Utils\Logger.cpp" />
+    <ClCompile Include="src\AudioBus.cpp" />
+    <ClCompile Include="src\AudioSources\AudioSource.cpp" />
+    <ClCompile Include="src\AudioSources\flac\Flac.cpp" />
+    <ClCompile Include="src\AudioSources\mp3\Mp3.cpp" />
+    <ClCompile Include="src\Effects\Effect.cpp" />
+    <ClCompile Include="src\Effects\Filters\IIRFilter.cpp" />
+    <ClCompile Include="src\Effects\Filters\PeakFilter.cpp" />
+    <ClCompile Include="src\ProcessingChain.cpp" />
+    <ClCompile Include="src\RingBuffer.cpp" />
+    <ClCompile Include="src\AudioSources\wav\Wav.cpp" />
+    <ClCompile Include="src\AudioThread.cpp" />
+    <ClCompile Include="src\AudioTrack.cpp" />
+    <ClCompile Include="src\PortAudioBackend.cpp" />
+    <ClCompile Include="src\Engine.cpp" />
+    <ClCompile Include="src\SDLBackend.cpp" />
+    <ClCompile Include="src\Utils\Logger.cpp" />
+    <ClCompile Include="src\VST\VSTPlugin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AudioBus.h" />
     <ClInclude Include="include\AudioSource.h" />
+    <ClInclude Include="include\Effect.h" />
+    <ClInclude Include="include\Effects\Filters\IIRFilter.h" />
+    <ClInclude Include="include\Effects\Filters\PeakFilter.h" />
+    <ClInclude Include="include\VST\VSTPlugin.h" />
+    <ClInclude Include="include\ProcessingChain.h" />
     <ClInclude Include="include\ProdCast.h" />
     <ClInclude Include="include\AudioSources\Flac.h" />
     <ClInclude Include="include\AudioSources\Mp3.h" />

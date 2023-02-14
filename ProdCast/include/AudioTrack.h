@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "AudioThread.h"
+#include "ProcessingChain.h"
 
 namespace ProdCast {
 	class ProdCastEngine;
@@ -14,6 +15,9 @@ namespace ProdCast {
 		void setParent(AudioBus* parent);
 
 		inline float* GetBuffer() { return m_buffer; };
+
+		void ApplyProcessingChain(ProcessingChain* processingChain);
+		ProcessingChain* getProcessingChain();
 
 		void setVolume(float volume);
 		float getVolume();
@@ -31,6 +35,8 @@ namespace ProdCast {
 
 		ProdCastEngine* m_engine;
 		AudioSettings* m_settings;
+
+		ProcessingChain* m_processingChain;
 
 		float* m_buffer;
 

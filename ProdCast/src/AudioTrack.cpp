@@ -14,10 +14,19 @@ namespace ProdCast {
 		m_pan = 0.0f;
 		setPan(0.0f);
 		m_isMuted = false;
+		m_processingChain = nullptr;
 	}
 
 	AudioTrack::~AudioTrack() {
 		delete[] m_buffer;
+	}
+
+	void AudioTrack::ApplyProcessingChain(ProcessingChain* processingChain) {
+		m_processingChain = processingChain;
+	}
+
+	ProcessingChain* AudioTrack::getProcessingChain() {
+		return m_processingChain;
 	}
 
 	void AudioTrack::setParent(AudioBus* parent) {

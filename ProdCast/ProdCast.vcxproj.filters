@@ -15,40 +15,55 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Prodcast\Engine.cpp">
+    <ClCompile Include="src\Engine.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\backends\sdl\SDLBackend.cpp">
+    <ClCompile Include="src\SDLBackend.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\backends\portaudio\PortAudioBackend.cpp">
+    <ClCompile Include="src\PortAudioBackend.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\AudioThread.cpp">
+    <ClCompile Include="src\AudioThread.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\AudioTrack.cpp">
+    <ClCompile Include="src\AudioTrack.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\AudioSources\wav\Wav.cpp">
+    <ClCompile Include="src\AudioSources\wav\Wav.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\Utils\Logger.cpp">
+    <ClCompile Include="src\Utils\Logger.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\RingBuffer.cpp">
+    <ClCompile Include="src\RingBuffer.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\AudioBus.cpp">
+    <ClCompile Include="src\AudioBus.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\AudioSources\AudioSource.cpp">
+    <ClCompile Include="src\AudioSources\AudioSource.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\AudioSources\mp3\Mp3.cpp">
+    <ClCompile Include="src\AudioSources\mp3\Mp3.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\Prodcast\AudioSources\flac\Flac.cpp">
+    <ClCompile Include="src\AudioSources\flac\Flac.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VST\VSTPlugin.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Effects\Effect.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Effects\Filters\IIRFilter.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ProcessingChain.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Effects\Filters\PeakFilter.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
@@ -96,6 +111,21 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\AudioSources\Flac.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ProcessingChain.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VST\VSTPlugin.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Effect.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Effects\Filters\IIRFilter.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Effects\Filters\PeakFilter.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>
