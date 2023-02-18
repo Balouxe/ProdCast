@@ -2,6 +2,8 @@
 #include <chrono>
 #include <iostream>
 
+#define PC_MAX_EFFECTS 10
+
 #ifdef PC_PLATFORM_WINDOWS
 	#ifdef PC_BUILD_DLL
 		#define PC_API __declspec(dllexport)

@@ -76,7 +76,7 @@ namespace ProdCast {
 		}
 
 		if (m_processingChain)
-			m_processingChain->ProcessBuffer(m_buffer, nbSamples, nbChannels);
+			m_processingChain->ProcessEffects(m_buffer, nbSamples, nbChannels);
 
 		for (i = 0; i < nbSamples * nbChannels; i++) {
 			buffer[i] += m_buffer[i];

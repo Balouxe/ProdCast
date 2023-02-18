@@ -58,7 +58,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk\public.sdk\source\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -80,7 +80,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk\public.sdk\source\;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -102,7 +102,6 @@
     <ClCompile Include="src\AudioSources\mp3\Mp3.cpp" />
     <ClCompile Include="src\Effects\Effect.cpp" />
     <ClCompile Include="src\Effects\Filters\IIRFilter.cpp" />
-    <ClCompile Include="src\Effects\Filters\PeakFilter.cpp" />
     <ClCompile Include="src\ProcessingChain.cpp" />
     <ClCompile Include="src\RingBuffer.cpp" />
     <ClCompile Include="src\AudioSources\wav\Wav.cpp" />
@@ -119,7 +118,6 @@
     <ClInclude Include="include\AudioSource.h" />
     <ClInclude Include="include\Effect.h" />
     <ClInclude Include="include\Effects\Filters\IIRFilter.h" />
-    <ClInclude Include="include\Effects\Filters\PeakFilter.h" />
     <ClInclude Include="include\VST\VSTPlugin.h" />
     <ClInclude Include="include\ProcessingChain.h" />
     <ClInclude Include="include\ProdCast.h" />

@@ -6,10 +6,20 @@ namespace ProdCast {
 
 	class PC_API IIRFilter : public Effect {
 	public:
-		IIRFilter();
+		enum FilterType {
+			Peak,
+			Notch,
+			LowPass,
+			HighPass,
+			LowShelf,
+			HighShelf
+		};
+
+		IIRFilter(ProdCastEngine* engine, FilterType type);
+		IIRFilter(ProdCastEngine* engine, FilterType type, float frequency, float gain, float Q);
 		~IIRFilter();
 
-		virtual void calculateIntermediates() = 0; // a0, a1, a2, b0, b1, b2
+		virtual void calculateIntermediates();
 
 		void setFrequency(float frequency);
 		float getFrequency();
@@ -20,18 +30,31 @@ namespace ProdCast {
 		void setQ(float Q);
 		float getQ();
 
+		void setType(FilterType type);
+		FilterType getType();
+
 		void ProcessBuffer(float* buffer, unsigned int samplesToGo, unsigned int nbChannels);
+
 	protected:
+		struct pastValues {
+			float x;
+			float xnm1;
+			float xnm2;
+			float y;
+			float ynm1;
+			float ynm2;
+		};
+
+		FilterType m_type;
+
 		float m_Q;
 		float m_gain;
 		uint32_t m_frequency;
 
+		pastValues* m_pastValues;
 
-		float x_left, xnm1_left, xnm2_left, y_left, ynm1_left, ynm2_left; // past values
-		float x_right, xnm1_right, xnm2_right, y_right, ynm1_right, ynm2_right; // past values
 		float a0, a1, a2, b0, b1, b2; // intermediate values
 
 		// check https://www.diva-portal.org/smash/get/diva2:1031081/FULLTEXT01.pdf for more info
 	};
-
 }
