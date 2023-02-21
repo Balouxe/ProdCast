@@ -1,14 +1,12 @@
 #include "VST/VSTPlugin.h"
-#include "pluginterfaces/vst/ivstmessage.h"
-#include "pluginterfaces/base/fplatform.h"
+#include "Engine.h"
+
+#include <codecvt>
 #include "public.sdk/source/common/memorystream.cpp"
 
 #include <string>
-#include <codecvt>
 #include <numeric>
 #include <memory>
-
-#include "Logger.h"
 
 namespace ProdCast {
 namespace VST {
@@ -114,7 +112,7 @@ namespace VST {
 	Steinberg::tresult PLUGIN_API VSTHostContext::resizeView(Steinberg::IPlugView* view, Steinberg::ViewRect* newSize) {
 		Steinberg::ViewRect current;
 		view->getSize(&current);
-
+		m_plugFrameListener->OnResizePlugView(*newSize);
 		view->onSize(newSize);
 		return Steinberg::kResultOk;
 	}
@@ -124,11 +122,11 @@ namespace VST {
 	VSTProcessor::VSTProcessor(VSTPlugin* plugin) : m_plugin(plugin) {};
 
 	std::string VSTProcessor::getName() {
-		return m_plugin->getName();
+		return m_plugin->GetEffectName();
 	}
 
-	void VSTProcessor::OnStartProcessing(uint32_t sampleRate, uint32_t blockSize) {
-		m_plugin->setSampleRate(sampleRate);
+	void VSTProcessor::OnStartProcessing(AudioSettings* settings) {
+		m_plugin->SetSettings(settings);
 	}
 
 	void VSTProcessor::Process(ProcessInfo& processInfo) {
@@ -137,6 +135,10 @@ namespace VST {
 
 	void VSTProcessor::OnStopProcessing() {
 
+	}
+
+	VSTPlugin* VSTProcessor::getPlugin() {
+		return m_plugin;
 	}
 
 	// AudioBusesInfo
@@ -181,7 +183,7 @@ namespace VST {
 		UpdateBusBuffers();
 	}
 
-	size_t AudioBusesInfo::GetNumBuses() {
+	uint32_t AudioBusesInfo::GetNumBuses() {
 		return m_busInfos.size();
 	}
 
@@ -193,7 +195,7 @@ namespace VST {
 			return nullptr;
 	}
 
-	size_t AudioBusesInfo::GetNumChannels()
+	uint32_t AudioBusesInfo::GetNumChannels()
 	{
 		return std::accumulate(m_busInfos.begin(),
 			m_busInfos.end(),
@@ -203,7 +205,7 @@ namespace VST {
 			});
 	}
 
-	size_t AudioBusesInfo::GetNumActiveChannels()
+	uint32_t AudioBusesInfo::GetNumActiveChannels()
 	{
 		return std::accumulate(m_busInfos.begin(),
 			m_busInfos.end(),
@@ -293,8 +295,8 @@ namespace VST {
 		m_cardinality = info.cardinality;
 		m_category = info.category;
 
-		m_tuid = malloc(16 * sizeof(char));
-		memcpy(m_tuid, &info.cid, 16 * sizeof(char));
+		m_cid = std::array<Steinberg::int8, 16>();
+		std::copy(info.cid, info.cid + 16, m_cid.begin());
 	}
 
 	VSTPlugin::ClassInfo::ClassInfo(Steinberg::PClassInfo2& info) {
@@ -307,8 +309,8 @@ namespace VST {
 		m_vendor = info.vendor;
 		m_classInfo2Data = true;
 
-		m_tuid = malloc(16 * sizeof(char));
-		memcpy(m_tuid, &info.cid, 16 * sizeof(char));
+		m_cid = std::array<Steinberg::int8, 16>();
+		std::copy(info.cid, info.cid + 16, m_cid.begin());
 	}
 
 	VSTPlugin::ClassInfo::ClassInfo(Steinberg::PClassInfoW& info) {
@@ -321,12 +323,11 @@ namespace VST {
 		m_vendor = C16to_string(&info.vendor[0]);
 		m_classInfo2Data = true;
 
-		m_tuid = malloc(16 * sizeof(char));
-		memcpy(m_tuid, &info.cid, 16 * sizeof(char));
+		m_cid = std::array<Steinberg::int8, 16>();
+		std::copy(info.cid, info.cid + 16, m_cid.begin());
 	}
 
 	VSTPlugin::ClassInfo::~ClassInfo() {
-		free(m_tuid);
 	}
 
 	// FactoryInfo
@@ -367,24 +368,180 @@ namespace VST {
 
 	// VSTPlugin
 
-	VSTPlugin* VSTProcessor::getPlugin() {
-		return m_plugin;
-	}
-
-	VSTPlugin::VSTPlugin() {
-
+	VSTPlugin::VSTPlugin(VSTPluginImplementation* impl,
+		VSTHostContext* hostContext,
+		std::function<void(VSTPlugin* p)> onDestruction) : m_implementation(impl), m_hostContext(hostContext) {
+		hostContext->SetVST3Plugin(this);
+		m_onDestruction = onDestruction;
 	}
 
 	VSTPlugin::~VSTPlugin() {
-
+		if (m_implementation->IsEditorOpened()) {
+			m_implementation->CloseEditor();
+		}
+		delete m_implementation; // ?
+		delete m_hostContext; // ?
+		// might be the VSTPluginImplementation responsability to delete these
+		m_onDestruction(this);
 	}
 
-	std::string VSTPlugin::getName() {
-		return "";
+	VSTPlugin::FactoryInfo& VSTPlugin::GetFactoryInfo() {
+		return m_implementation->GetFactoryInfo();
+	}
+	VSTPlugin::ClassInfo& VSTPlugin::GetComponentInfo() {
+		return m_implementation->GetComponentInfo();
+	}
+	std::string VSTPlugin::GetEffectName() {
+		return m_implementation->GetEffectName();
+	}
+	uint32_t VSTPlugin::GetNumInputs() {
+		return m_implementation->GetBusesInfo(Steinberg::Vst::BusDirections::kInput).GetNumActiveChannels();
+	}
+	uint32_t VSTPlugin::GetNumOutputs() {
+		return m_implementation->GetBusesInfo(Steinberg::Vst::BusDirections::kOutput).GetNumActiveChannels();
 	}
 
-	void VSTPlugin::setSampleRate(uint32_t sampleRate) {
+	uint32_t VSTPlugin::GetNumParams() {
+		return m_implementation->GetParameterInfoList().size();
+	}
+	VSTPlugin::ParameterInfo& VSTPlugin::GetParameterInfoByIndex(uint32_t index) {
+		return m_implementation->GetParameterInfoList()[index];
+	}
+	VSTPlugin::ParameterInfo& VSTPlugin::GetParameterInfoByID(Steinberg::Vst::ParamID id) {
+		std::vector<VSTPlugin::ParameterInfo>& infoList = m_implementation->GetParameterInfoList();
 
+		for (int i = 0; i < infoList.size(); i++) {
+			if (id == infoList[i].ID) {
+				return infoList[i];
+			}
+		}
+		PC_ERROR("VST: Didn't find parameter info!");
+		VSTPlugin::ParameterInfo empty = {};
+		return empty;
+	}
+
+	uint32_t VSTPlugin::GetNumUnitInfo() {
+		return m_implementation->GetUnitInfoList().size();
+	}
+	VSTPlugin::UnitInfo& VSTPlugin::GetUnitInfoByIndex(uint32_t index) {
+		return m_implementation->GetUnitInfoList()[index];
+	}
+	VSTPlugin::UnitInfo& VSTPlugin::GetUnitInfoByID(Steinberg::Vst::UnitID id) {
+		std::vector<VSTPlugin::UnitInfo>& infoList = m_implementation->GetUnitInfoList();
+
+		for (int i = 0; i < infoList.size(); i++) {
+			if (id == infoList[i].ID) {
+				return infoList[i];
+			}
+		}
+		PC_ERROR("VST: Didn't find unit info!");
+		VSTPlugin::UnitInfo empty = {};
+		return empty;
+	}
+
+	uint32_t VSTPlugin::GetNumBuses(Steinberg::Vst::BusDirection dir) {
+		return m_implementation->GetBusesInfo(dir).GetNumBuses();
+	}
+	BusInfo& VSTPlugin::GetBusInfoByIndex(Steinberg::Vst::BusDirection dir, uint32_t index) {
+		return *m_implementation->GetBusesInfo(dir).GetBusInfo(index);
+	}
+
+	Steinberg::Vst::ParamValue VSTPlugin::GetParameterValueByIndex(uint32_t index) {
+		return m_implementation->GetParameterValueByIndex(index);
+	}
+	Steinberg::Vst::ParamValue VSTPlugin::GetParameterValueByID(Steinberg::Vst::ParamID id) {
+		return m_implementation->GetParameterValueByID(id);
+	}
+
+	std::string VSTPlugin::ValueToStringByIndex(uint32_t index, Steinberg::Vst::ParamValue value) {
+		return m_implementation->ValueToStringByIndex(index, value);
+	}
+	Steinberg::Vst::ParamValue VSTPlugin::StringToValueTByIndex(uint32_t index, std::string string) {
+		return m_implementation->StringToValueTByIndex(index, string);
+	}
+
+	std::string VSTPlugin::ValueToStringByID(Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue value) {
+		return m_implementation->ValueToStringByID(id, value);
+	}
+	Steinberg::Vst::ParamValue VSTPlugin::StringToValueByID(Steinberg::Vst::ParamID id, std::string string) {
+		return m_implementation->StringToValueByID(id, string);
+	}
+
+	bool VSTPlugin::IsBusActive(Steinberg::Vst::BusDirection dir, uint32_t index) {
+		return m_implementation->GetBusesInfo(dir).GetBusInfo(index)->isActive;
+	}
+	void VSTPlugin::SetBusActive(Steinberg::Vst::BusDirection dir, uint32_t index, bool state) {
+		m_implementation->GetBusesInfo(dir).SetActive(index, state);
+	}
+	Steinberg::Vst::SpeakerArrangement VSTPlugin::GetSpeakerArrangementForBus(Steinberg::Vst::BusDirection dir, uint32_t index) {
+		return m_implementation->GetBusesInfo(dir).GetBusInfo(index)->speaker;
+	}
+	bool VSTPlugin::SetSpeakerArrangement(Steinberg::Vst::BusDirection dir, uint32_t index, Steinberg::Vst::SpeakerArrangement arr) {
+		return m_implementation->GetBusesInfo(dir).SetSpeakerArrangement(index, arr);
+	}
+
+	void VSTPlugin::Resume() {
+		m_implementation->Resume();
+	}
+	void VSTPlugin::Suspend() {
+		m_implementation->Suspend();
+	}
+	bool VSTPlugin::IsResumed() {
+		return m_implementation->IsResumed();
+	}
+
+	void VSTPlugin::SetSettings(AudioSettings* settings) {
+		m_implementation->SetAudioSettings(settings);
+	}
+
+	bool VSTPlugin::HasEditor() {
+		return m_implementation->HasEditor();
+	}
+	bool VSTPlugin::OpenEditor(WindowHandle wnd, PlugFrameListener* listener) {
+		CloseEditor();
+
+		if (!listener) {
+			PC_ERROR("VST: Tried to open editor without listener!");
+			return false;
+		}
+		if (m_hostContext->m_plugFrameListener != nullptr) {
+			PC_ERROR("VST: Plug Frame listener not nullptr!");
+			return false;
+		}
+
+		m_hostContext->m_plugFrameListener = listener;
+		return m_implementation->OpenEditor(wnd, m_hostContext);
+	}
+	void VSTPlugin::CloseEditor() {
+		if (m_implementation) {
+			m_implementation->CloseEditor();
+			m_hostContext->m_plugFrameListener = nullptr;
+		}
+	}
+	bool VSTPlugin::IsEditorOpened() {
+		return m_implementation->IsEditorOpened();
+	}
+	Steinberg::ViewRect VSTPlugin::GetPreferredRect() {
+		return m_implementation->GetPreferredRect();
+	}
+
+	uint32_t VSTPlugin::GetProgramIndex(Steinberg::Vst::UnitID unitID) {
+		return m_implementation->GetProgramIndex(unitID);
+	}
+	void VSTPlugin::SetProgramIndex(uint32_t index, Steinberg::Vst::UnitID unitID) {
+		return m_implementation->SetProgramIndex(index, unitID);
+	}
+
+	void VSTPlugin::EnqueueParameterChange(Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue value) {
+		m_implementation->PushBackParameterChange(id, value);
+	}
+
+	void VSTPlugin::RestartComponent(Steinberg::int32 flags) {
+		m_implementation->RestartComponent(flags);
+	}
+
+	void VSTPlugin::Process(ProcessInfo& pi) {
+		m_implementation->Process(pi);
 	}
 
 	// Useful for VSTPluginImplementation
@@ -442,8 +599,7 @@ namespace VST {
 
 	// VSTPluginImplementation
 
-	VSTPluginImplementation::VSTPluginImplementation(AudioSettings* settings,
-		Steinberg::IPluginFactory* factory,
+	VSTPluginImplementation::VSTPluginImplementation(Steinberg::IPluginFactory* factory,
 		VSTPlugin::FactoryInfo& factoryInfo,
 		VSTPlugin::ClassInfo& classInfo,
 		Steinberg::FUnknown* hostContext)
@@ -452,7 +608,6 @@ namespace VST {
 		m_editControllerIsCreatedNew = false;
 		m_isEditorOpened = false;
 		m_isProcessingStarted = false;
-		m_settings = settings;
 		m_hasEditor = false;
 		m_status = Status::Invalid;
 
@@ -462,6 +617,7 @@ namespace VST {
 		}
 
 		LoadPlugin(factory, classInfo, hostContext);
+
 		m_inputEvents.setMaxSize(128);
 		m_outputEvents.setMaxSize(128);
 	}
@@ -534,7 +690,7 @@ namespace VST {
 	}
 
 	void VSTPluginImplementation::LoadInterfaces(Steinberg::IPluginFactory* factory, VSTPlugin::ClassInfo& classInfo, Steinberg::FUnknown* hostContext) {
-		Steinberg::FUID fuid = Steinberg::FUID::fromTUID((const char*)classInfo.CID());
+		Steinberg::FUID fuid = Steinberg::FUID::fromTUID(classInfo.CID().data());
 		if (!factory) {
 			PC_ERROR("VST: Plugin Factory is null!");
 			return;
@@ -546,12 +702,15 @@ namespace VST {
 			PC_ERROR("VST: Failed creating instance of IPluginFactory!");
 			return;
 		}
+
+		// Only used for instruments
+	
 		res = component->setIoMode(Steinberg::Vst::IoModes::kAdvanced);
-		if (!(res == Steinberg::kResultOk && res == Steinberg::kNotImplemented)) {
+		if (!(res == Steinberg::kResultOk || res == Steinberg::kNotImplemented)) {
 			PC_ERROR("VST: Couldn't set VST IO mode!");
 			return;
 		}
-
+	
 		m_status = Status::Created;
 
 		res = component->initialize(hostContext);
@@ -918,22 +1077,53 @@ namespace VST {
 
 		m_status = Status::SetupDone;
 
-		auto PrepareBusBuffers = [&](AudioBusesInfo& buses, uint32_t block_size, float* buffer) {
-			delete buffer;
-			buffer = new float[buses.GetNumChannels(), block_size];
-
-			float* data = buffer;
-			Steinberg::Vst::AudioBusBuffers* busBuffers = buses.GetBusBuffers();
-			for (int i = 0; i < buses.GetNumBuses(); ++i) {
+		ResizeBuffers(m_inputBusesInfo.GetNumChannels(), m_outputBusesInfo.GetNumChannels(), m_settings->bufferSize);
+		// prepare input buffer
+		{
+			auto data = m_inputBufferHeads.data();
+			auto* busBuffers = m_inputBusesInfo.GetBusBuffers();
+			for (int i = 0; i < m_inputBusesInfo.GetNumBuses(); i++) {
 				auto& buffer = busBuffers[i];
-				buffer.channelBuffers32 = &data;
-				buffer.silenceFlags = (buses.IsActive(i) ? 0 : -1);
+				buffer.channelBuffers32 = data;
+				buffer.silenceFlags = (m_inputBusesInfo.IsActive(i) ? 0 : -1);
 				data += buffer.numChannels;
 			}
-		};
+		} 
+		// prepare output buffer
+		{
+			auto data = m_outputBufferHeads.data();
+			auto* busBuffers = m_outputBusesInfo.GetBusBuffers();
+			for (int i = 0; i < m_outputBusesInfo.GetNumBuses(); i++) {
+				auto& buffer = busBuffers[i];
+				buffer.channelBuffers32 = data;
+				buffer.silenceFlags = (m_outputBusesInfo.IsActive(i) ? 0 : -1);
+				data += buffer.numChannels;
+			}
+		}
 
-		PrepareBusBuffers(m_inputBusesInfo, m_settings->bufferSize, m_inputBuffer);
-		PrepareBusBuffers(m_outputBusesInfo, m_settings->bufferSize, m_outputBuffer);
+		/*
+		delete m_inputBuffer;
+		m_inputBuffer = new float[m_settings->bufferSize* m_inputBusesInfo.GetNumChannels()];
+		float** data = &m_inputBuffer;
+		Steinberg::Vst::AudioBusBuffers* busBuffers = m_inputBusesInfo.GetBusBuffers();
+		for (int i = 0; i < m_inputBusesInfo.GetNumBuses(); ++i) {
+			auto& busBuffer = busBuffers[i];
+			busBuffer.channelBuffers32 = data;
+			busBuffer.silenceFlags = (m_inputBusesInfo.IsActive(i) ? 0 : -1);
+			*data += busBuffer.numChannels * m_settings->bufferSize;
+		}
+
+		delete m_outputBuffer;
+		m_outputBuffer = new float[m_settings->bufferSize * m_outputBusesInfo.GetNumChannels()];
+		data = &m_outputBuffer;
+		busBuffers = m_outputBusesInfo.GetBusBuffers();
+		for (int i = 0; i < m_outputBusesInfo.GetNumBuses(); ++i) {
+			auto& busBuffer = busBuffers[i];
+			busBuffer.channelBuffers32 = data;
+			busBuffer.silenceFlags = (m_outputBusesInfo.IsActive(i) ? 0 : -1);
+			*data += busBuffer.numChannels;
+		}
+		*/
 
 		res = GetComponent()->setActive(true);
 		if (res != Steinberg::kResultOk && res != Steinberg::kNotImplemented) {
@@ -990,6 +1180,10 @@ namespace VST {
 	void VSTPluginImplementation::Process(ProcessInfo processInfo) {
 		if (!processInfo.timeInfo) {
 			PC_ERROR("VST: Process Information missing time info!");
+			return;
+		}
+		if (!m_inputBuffer.data() || !m_outputBuffer.data()) {
+			PC_WARN("VST: buffers uninitialized, cannot process!");
 		}
 		ProcessInfo::TransportInfo& timeInfo = *processInfo.timeInfo;
 		Steinberg::Vst::ProcessContext processContext = {};
@@ -1022,17 +1216,17 @@ namespace VST {
 		// MIDI Stuff - Won't care for now
 		/*
 		for (auto& m : processInfo.input_midi_buffer_.buffer_) {
-			Vst::Event e;
+			Steinberg::Vst::Event e;
 			e.busIndex = 0;
 			e.sampleOffset = m.offset_;
 			e.ppqPosition = process_context.projectTimeMusic;
-			e.flags = Vst::Event::kIsLive;
+			e.flags = Steinberg::Vst::Event::kIsLive;
 
 			using namespace MidiDataType;
 
-			auto midi_map = [this](int channel, int offset, int cc, Vst::ParamValue value) {
+			auto midi_map = [this](int channel, int offset, int cc, Steinberg::Vst::ParamValue value) {
 				if (!midi_mapping_) { return; }
-				Vst::ParamID param_id = 0;
+				Steinberg::Vst::ParamID param_id = 0;
 				auto result = midi_mapping_->getMidiControllerAssignment(0, channel, cc, param_id);
 				if (result == kResultOk) {
 					PushBackParameterChange(param_id, value, offset);
@@ -1041,7 +1235,7 @@ namespace VST {
 			};
 
 			if (auto note_on = m.As<NoteOn>()) {
-				e.type = Vst::Event::kNoteOnEvent;
+				e.type = Steinberg::Vst::Event::kNoteOnEvent;
 				e.noteOn.channel = m.channel_;
 				e.noteOn.pitch = note_on->pitch_;
 				e.noteOn.velocity = note_on->velocity_ / 127.0;
@@ -1051,7 +1245,7 @@ namespace VST {
 				input_events_.addEvent(e);
 			}
 			else if (auto note_off = m.As<NoteOff>()) {
-				e.type = Vst::Event::kNoteOffEvent;
+				e.type = Steinberg::Vst::Event::kNoteOffEvent;
 				e.noteOff.channel = m.channel_;
 				e.noteOff.pitch = note_off->pitch_;
 				e.noteOff.velocity = note_off->off_velocity_ / 127.0;
@@ -1060,7 +1254,7 @@ namespace VST {
 				input_events_.addEvent(e);
 			}
 			else if (auto poly_press = m.As<PolyphonicKeyPressure>()) {
-				e.type = Vst::Event::kPolyPressureEvent;
+				e.type = Steinberg::Vst::Event::kPolyPressureEvent;
 				e.polyPressure.channel = m.channel_;
 				e.polyPressure.pitch = poly_press->pitch_;
 				e.polyPressure.pressure = poly_press->value_ / 127.0;
@@ -1071,26 +1265,21 @@ namespace VST {
 				midi_map(m.channel_, m.offset_, cc->control_number_, cc->data_ / 128.0);
 			}
 			else if (auto cp = m.As<ChannelPressure>()) {
-				midi_map(m.channel_, m.offset_, Vst::ControllerNumbers::kAfterTouch, cp->value_ / 128.0);
+				midi_map(m.channel_, m.offset_, Steinberg::Vst::ControllerNumbers::kAfterTouch, cp->value_ / 128.0);
 			}
 			else if (auto pb = m.As<PitchBendChange>()) {
-				midi_map(m.channel_, m.offset_, Vst::ControllerNumbers::kPitchBend,
+				midi_map(m.channel_, m.offset_, Steinberg::Vst::ControllerNumbers::kPitchBend,
 					((pb->value_msb_ << 7) | pb->value_lsb_) / 16384.0);
 			}
-		} */
+		}*/
 
-		auto copy_buffer = [&](float* src, float* dest,
-			uint32_t lengthToCopy)
 		{
-			int channels = std::min(m_inputBusesInfo.GetNumChannels(), m_outputBusesInfo.GetNumChannels());
-			if (channels == 0) { return; }
-
-			for (int i = 0; i < lengthToCopy * channels; i++) {
-				dest[i] = src[i];
+			size_t const min_ch = std::min(processInfo.numChannels, m_inputBusesInfo.GetNumChannels());
+			if (min_ch == 0) { return; }
+			for (int i = 0; i < processInfo.timeInfo->GetSmpDuration() * min_ch; i++) {
+				m_inputBuffer[i] = processInfo.inputBuffer[i];
 			}
 		};
-
-		copy_buffer(processInfo.inputBuffer, m_inputBuffer, processInfo.timeInfo->GetSmpDuration());
 
 		PopFrontParameterChanges(m_inParameterChanges);
 
@@ -1108,7 +1297,7 @@ namespace VST {
 		processData.inputParameterChanges = &m_inParameterChanges;
 		processData.outputParameterChanges = &m_outParameterChanges;
 
-		auto const res = GetAudioProcessor()->process(processData);
+		Steinberg::tresult res = GetAudioProcessor()->process(processData);
 
 		static bool kOutputParameter = false;
 
@@ -1116,8 +1305,13 @@ namespace VST {
 			PC_ERROR("VST: Couldn't process!");
 		}
 
-		copy_buffer(m_outputBuffer, processInfo.outputBuffer,
-			processInfo.timeInfo->GetSmpDuration());
+		{
+			size_t const min_ch = std::min(processInfo.numChannels, m_outputBusesInfo.GetNumChannels());
+			if (min_ch == 0) { return; }
+			for (int i = 0; i < min_ch * processInfo.timeInfo->GetSmpDuration(); i++) {
+				processInfo.outputBuffer[i] = m_outputBuffer[i];
+			}
+		};
 	}
 
 	void VSTPluginImplementation::PushBackParameterChange(Steinberg::Vst::ParamID id, Steinberg::Vst::ParamValue value, int64_t offset) {
@@ -1128,14 +1322,38 @@ namespace VST {
 		queue->addPoint(offset, value, ref_point_index);
 	}
 
-	// Getters / Setters
+	void VSTPluginImplementation::PopFrontParameterChanges(Steinberg::Vst::ParameterChanges& dest) {
+		std::unique_lock lock = std::unique_lock(m_ParameterChangesMutex);
 
-	void VSTPluginImplementation::SetBlockSize(int blockSize) {
-		// useless because i use AudioSettings
+		for (uint32_t i = 0; i < m_ParameterChangesQueue.getParameterCount(); i++) {
+			Steinberg::Vst::IParamValueQueue *srcQueue = m_ParameterChangesQueue.getParameterData(i);
+			Steinberg::Vst::ParamID const srcID = srcQueue->getParameterId();
+
+			if (srcID == Steinberg::Vst::kNoParamId || srcQueue->getPointCount() == 0) {
+				continue;
+			}
+
+			Steinberg::int32 ref_queue_index;
+			auto dest_queue = dest.addParameterData(srcQueue->getParameterId(), ref_queue_index);
+
+			for (uint32_t v = 0; v < srcQueue->getPointCount(); v++) {
+				Steinberg::int32 ref_offset;
+				Steinberg::Vst::ParamValue ref_value;
+				Steinberg::tresult result = srcQueue->getPoint(v, ref_offset, ref_value);
+				if (result != Steinberg::kResultTrue) { continue; }
+
+				Steinberg::int32 ref_point_index;
+				dest_queue->addPoint(ref_offset, ref_value, ref_point_index);
+			}
+		}
+
+		m_ParameterChangesQueue.clearQueue();
 	}
 
-	void VSTPluginImplementation::SetSamplingRate(int samplingRate) {
-		// useless because i use AudioSettings
+	void VSTPluginImplementation::SetAudioSettings(AudioSettings* settings) {
+		Suspend();
+		m_settings = settings;
+		Resume();
 	}
 
 	VSTPlugin::FactoryInfo& VSTPluginImplementation::GetFactoryInfo() {
@@ -1260,5 +1478,275 @@ namespace VST {
 	Steinberg::Vst::IEditController* VSTPluginImplementation::GetEditController() { return m_editController; }
 	Steinberg::Vst::IEditController2* VSTPluginImplementation::GetEditController2() { return m_editController2; }
 
+	void VSTPluginImplementation::ResizeBuffers(uint32_t inputNumChannels, uint32_t outputNumChannels, uint32_t numSamples) {
+		{
+			std::vector<float> tmp(inputNumChannels * numSamples);
+			std::vector<float*> tmp_heads(inputNumChannels);
+
+			m_inputBuffer.swap(tmp);
+			m_inputBufferHeads.swap(tmp_heads);
+			for (size_t i = 0; i < inputNumChannels; i++) {
+				m_inputBufferHeads[i] = m_inputBuffer.data() + (i * numSamples);
+			}
+		}
+		{
+			std::vector<float> tmp(outputNumChannels * numSamples);
+			std::vector<float*> tmp_heads(outputNumChannels);
+
+			m_outputBuffer.swap(tmp);
+			m_outputBufferHeads.swap(tmp_heads);
+			for (size_t i = 0; i < outputNumChannels; i++) {
+				m_outputBufferHeads[i] = m_outputBuffer.data() + (i * numSamples);
+			}
+		}
+	}
+
+	// Useful for VSTPluginFactory
+
+	VSTPlugin* CreatePlugin(Steinberg::IPluginFactory* factory,
+		VSTPlugin::FactoryInfo& factoryInfo,
+		VSTPlugin::ClassInfo& classInfo,
+		std::function<void(VSTPlugin* p)> onDestruction) {
+
+		VSTHostContext* hostContext = new VSTHostContext("Prodcast VST Handler");
+		VSTPluginImplementation* impl = new VSTPluginImplementation(factory, factoryInfo, classInfo, hostContext->unknownCast());
+		VSTPlugin* plugin = new VSTPlugin(impl, hostContext, onDestruction);
+
+		return plugin;
+	}
+
+	// VSTPluginFactory
+	
+	VSTPluginFactory::VSTPluginFactory(std::string modulePath) {
+		Module mod(modulePath.c_str());
+		if (!mod.GetModule()) {
+			PC_ERROR("VST: Error loading library!");
+			return;
+		}
+
+		auto initDLL = reinterpret_cast<SetupProc>(mod.getProcAddress("InitDll"));
+		if (initDLL) {
+			initDLL();
+		}
+
+		GetFactoryProc getFactory = (GetFactoryProc)mod.getProcAddress("GetPluginFactory");
+		if (!getFactory) {
+			PC_ERROR("VST: Not a VST3 library!");
+			return;
+		}
+
+		Steinberg::IPluginFactory* factory = getFactory();
+		if (!factory) {
+			PC_ERROR("VST: Failed to get VST factory!");
+			return;
+		}
+
+		Steinberg::PFactoryInfo factoryInfo;
+		factory->getFactoryInfo(&factoryInfo);
+
+		std::vector<VSTPlugin::ClassInfo> classInfoList;
+
+		for (int i = 0; i < factory->countClasses(); i++) {
+			Steinberg::IPluginFactory3* factory3;
+			Steinberg::tresult res = factory->queryInterface(Steinberg::IPluginFactory3::iid, (void**)&factory3);
+			if (factory3) {
+				Steinberg::PClassInfoW info;
+				factory3->getClassInfoUnicode(i, &info);
+				classInfoList.emplace_back(info);
+			}
+			else {
+				Steinberg::IPluginFactory2* factory2;
+				res = factory->queryInterface(Steinberg::IPluginFactory2::iid, (void**)&factory2);
+				if (factory2) {
+					Steinberg::PClassInfo2 info;
+					factory2->getClassInfo2(i, &info);
+					classInfoList.emplace_back(info);
+				}
+				else {
+					Steinberg::PClassInfo info;
+					factory->getClassInfo(i, &info);
+					classInfoList.emplace_back(info);
+				}
+			}
+		}
+
+		m_module = std::move(mod);
+		m_factory = std::move(factory);
+		m_factoryInfo = VSTPlugin::FactoryInfo(factoryInfo);
+		m_classInfoList = std::move(classInfoList);
+	}
+
+	VSTPluginFactory::~VSTPluginFactory() {
+		if (!m_loadedPlugins.empty()) {
+			PC_WARN("VST: loaded plugins list is not empty!");
+			if (m_module.GetModule()) {
+				SetupProc exitDLL = (SetupProc)m_module.getProcAddress("ExitDll");
+				if (exitDLL) {
+					exitDLL();
+				}
+			}
+		}
+	}
+
+	VSTPlugin::FactoryInfo& VSTPluginFactory::GetFactoryInfo() {
+		return m_factoryInfo;
+	}
+
+	VSTPlugin::ClassInfo& VSTPluginFactory::GetComponentInfo(uint32_t index) {
+		return m_classInfoList[index];
+	}
+
+	uint32_t VSTPluginFactory::GetComponentCount() {
+		return m_classInfoList.size();
+	}
+
+	VSTPlugin* VSTPluginFactory::CreateByIndex(uint32_t index) {
+		VSTPlugin* plugin = CreatePlugin(m_factory, GetFactoryInfo(), GetComponentInfo(index), [this](VSTPlugin* p) { OnVSTPluginIsDestructed(p); });
+		OnVSTPluginIsCreated(plugin);
+		return plugin;
+	}
+
+	VSTPlugin* VSTPluginFactory::CreateByID(void* componentID) {
+		for (uint32_t i = 0; i < GetComponentCount(); i++) {
+			if (componentID == GetComponentInfo(i).CID().data()) {
+				return CreateByIndex(i);
+			}
+		}
+		PC_ERROR("VST: No VST found with this CID!");
+	}
+
+	uint32_t VSTPluginFactory::GetNumLoadedPlugins() {
+		return m_loadedPlugins.size();
+	}
+
+	void VSTPluginFactory::OnVSTPluginIsCreated(VSTPlugin* plugin) {
+		m_loadedPlugins.push_back(plugin);
+		PC_TRACE("VST: Loaded plugin");
+	}
+
+	void VSTPluginFactory::OnVSTPluginIsDestructed(VSTPlugin* plugin){
+		auto found = std::find(m_loadedPlugins.begin(), m_loadedPlugins.end(), plugin);
+		if (found == m_loadedPlugins.end()) {
+			PC_ERROR("VST: Plugin not found in loaded plugins list!");
+		}
+		m_loadedPlugins.erase(found);
+	}
+
+	// VSTHandler
+
+	std::mutex VSTHandler::m_mutex = std::mutex();
+	std::map<std::string, VSTPluginFactory*> VSTHandler::m_map = std::map<std::string, VSTPluginFactory*>();
+
+	VSTPluginFactory* VSTHandler::FindOrCreateFactory(std::string modulePath) {
+		std::unique_lock lock = std::unique_lock(m_mutex);
+
+		auto found = m_map.find(modulePath);
+
+		if (found == m_map.end()) {
+			VSTPluginFactory* factory = new VSTPluginFactory(modulePath);
+			found = m_map.emplace(modulePath, factory).first;
+		}
+
+		return found->second;
+	}
+
+	void VSTHandler::ShrinkList() {
+		std::map<std::string, VSTPluginFactory*> tmp;
+
+		for (auto it = m_map.begin(), end = m_map.end(); it != end;)
+		{
+			if (it->second->GetNumLoadedPlugins() == 0) {
+				it = m_map.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
+	}
+
+	// VSTEffect
+
+	VSTEffect::VSTEffect(ProdCast::ProdCastEngine* engine, const char* path) {
+		m_engine = engine;
+		m_settings = engine->getAudioSettings();
+		
+		LoadEffect(path);
+	}
+				
+	VSTEffect::VSTEffect(ProdCast::ProdCastEngine* engine) {
+		m_engine = engine;
+		m_settings = engine->getAudioSettings();
+	}
+
+	void VSTEffect::LoadEffect(const char* path) {
+		if (m_initialized) {
+			PC_ERROR("VST: Effect already loaded!");
+			return;
+		}
+		m_path = path;
+
+		VSTPluginFactory* factory = ProdCast::VST::VSTHandler::FindOrCreateFactory(path);
+		if (!factory) {
+			PC_ERROR("VST: Couldn't find or create factory!");
+			m_initialized = false;
+			return;
+		}
+		else if (factory->GetComponentCount() == 0) {
+			PC_ERROR("VST: no plugin!");
+			return;
+		}
+		VSTPlugin* plugin = factory->CreateByIndex(0);
+
+		if (!plugin) {
+			PC_ERROR("VST: Error loading VST Effect!");
+			m_initialized = false;
+			return;
+		}
+
+		m_plugin = plugin;
+		m_plugin->SetSpeakerArrangement(Steinberg::Vst::BusDirections::kInput, 0, Steinberg::Vst::SpeakerArr::kStereo);
+		m_plugin->SetSpeakerArrangement(Steinberg::Vst::BusDirections::kOutput, 0, Steinberg::Vst::SpeakerArr::kStereo);
+		m_plugin->SetSettings(m_settings);
+		m_TransportInfo.playing = true;
+		m_TransportInfo.sampleRate = m_settings->sampleRate;
+		m_TransportInfo.tempo = 120;
+		m_TransportInfo.smpBeginPos = 0;
+		m_TransportInfo.smpEndPos = m_settings->bufferSize;
+		m_initialized = true;
+		m_buffer = new float[m_settings->outputChannels * m_settings->bufferSize];
+	}
+
+	VSTEffect::~VSTEffect() {
+		m_plugin->Suspend();
+		delete m_plugin;
+	}
+
+				
+	void VSTEffect::ProcessBuffer(float* buffer, unsigned int bufferSize, unsigned int numChannels) {
+		if (!m_initialized) {
+			return;
+		}
+
+		for (int i = 0; i < bufferSize; i++) {
+			m_buffer[i] = buffer[i * 2];
+			m_buffer[i + bufferSize] = buffer[i * 2 + 1];
+		}
+
+		ProcessInfo info;
+		info.numChannels = numChannels;
+		info.inputBuffer = m_buffer;
+		info.outputBuffer = m_buffer;
+		info.timeInfo = &m_TransportInfo;
+		m_plugin->Process(info);
+
+		for (int i = 0; i < bufferSize; i++) {
+			buffer[i * 2] = info.outputBuffer[i];
+			buffer[i * 2 + 1] = info.outputBuffer[bufferSize + i];
+		}
+	}
+
+	VSTPlugin* VSTEffect::getPlugin() {
+		return m_plugin;
+	}
 }
 }

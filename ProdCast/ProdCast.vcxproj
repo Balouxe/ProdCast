@@ -64,8 +64,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SDL)\bin\Debug;%(AdditionalLibraryDirectories);$(ProjectDir)vendor\backends\portaudio</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SDL)\bin\Debug;%(AdditionalLibraryDirectories);$(ProjectDir)vendor\backends\portaudio;$(VST_SDK)\build\lib\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;portaudio_x64.lib;base.lib;pluginterfaces.lib;sdk.lib;sdk_common.lib;sdk_hosting.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(TargetDir)$(ProjectName).dll" "$(SolutionDir)bin\$(Configuration)-$(Platform)\FrogCast\$(ProjectName).dll"</Command>
