@@ -55,7 +55,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;PC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
@@ -77,7 +77,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;PC_PLATFORM_WINDOWS;PC_BUILD_DLL;PC_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SDL)\include;$(VST_SDK)\vst3sdk;$(PORTAUDIO)\include;$(SolutionDir)ProdCast\vendor\dr_libs;$(SolutionDir)ProdCast\vendor\spdlog\include;$(SolutionDir)ProdCast\include</AdditionalIncludeDirectories>
@@ -97,7 +97,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\AudioBus.cpp" />
-    <ClCompile Include="src\AudioSources\AudioSource.cpp" />
+    <ClCompile Include="src\AudioSources\AudioFile.cpp" />
     <ClCompile Include="src\AudioSources\flac\Flac.cpp" />
     <ClCompile Include="src\AudioSources\mp3\Mp3.cpp" />
     <ClCompile Include="src\Effects\Effect.cpp" />
@@ -107,16 +107,16 @@
     <ClCompile Include="src\AudioSources\wav\Wav.cpp" />
     <ClCompile Include="src\AudioThread.cpp" />
     <ClCompile Include="src\AudioTrack.cpp" />
-    <ClCompile Include="src\PortAudioBackend.cpp" />
+    <ClCompile Include="src\backends\portaudio\PortAudioBackend.cpp" />
     <ClCompile Include="src\Engine.cpp" />
-    <ClCompile Include="src\SDLBackend.cpp" />
+    <ClCompile Include="src\backends\sdl\SDLBackend.cpp" />
     <ClCompile Include="src\Utils\Logger.cpp" />
     <ClCompile Include="src\VST\VSTPlugin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AudioBus.h" />
-    <ClInclude Include="include\AudioSource.h" />
-    <ClInclude Include="include\Effect.h" />
+    <ClInclude Include="include\AudioSources\AudioFile.h" />
+    <ClInclude Include="include\Effects\Effect.h" />
     <ClInclude Include="include\Effects\Filters\IIRFilter.h" />
     <ClInclude Include="include\VST\VSTPlugin.h" />
     <ClInclude Include="include\ProcessingChain.h" />
@@ -128,7 +128,7 @@
     <ClInclude Include="include\AudioTrack.h" />
     <ClInclude Include="include\Backends\PortAudioBackend.h" />
     <ClInclude Include="include\Engine.h" />
-    <ClInclude Include="include\AudioBackend.h" />
+    <ClInclude Include="include\Backends\AudioBackend.h" />
     <ClInclude Include="include\Backends\SDLBackend.h" />
     <ClInclude Include="include\Core.h" />
     <ClInclude Include="include\RingBuffer.h" />

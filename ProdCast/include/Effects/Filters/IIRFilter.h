@@ -1,6 +1,6 @@
 #pragma once
 #include "Core.h"
-#include "Effect.h"
+#include "Effects/Effect.h"
 
 namespace ProdCast {
 
@@ -16,13 +16,13 @@ namespace ProdCast {
 		};
 
 		IIRFilter(ProdCastEngine* engine, FilterType type);
-		IIRFilter(ProdCastEngine* engine, FilterType type, float frequency, float gain, float Q);
+		IIRFilter(ProdCastEngine* engine, FilterType type, uint32_t frequency, float gain, float Q);
 		~IIRFilter();
 
 		virtual void calculateIntermediates();
 
-		void setFrequency(float frequency);
-		float getFrequency();
+		void setFrequency(uint32_t frequency);
+		uint32_t getFrequency();
 
 		void setGain(float gain);
 		float getGain();

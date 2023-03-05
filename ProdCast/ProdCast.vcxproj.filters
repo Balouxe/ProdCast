@@ -18,10 +18,10 @@
     <ClCompile Include="src\Engine.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\SDLBackend.cpp">
+    <ClCompile Include="src\backends\sdl\SDLBackend.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\PortAudioBackend.cpp">
+    <ClCompile Include="src\backends\portaudio\PortAudioBackend.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\AudioThread.cpp">
@@ -42,7 +42,7 @@
     <ClCompile Include="src\AudioBus.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="src\AudioSources\AudioSource.cpp">
+    <ClCompile Include="src\AudioSources\AudioFile.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\AudioSources\mp3\Mp3.cpp">
@@ -77,7 +77,7 @@
     <ClInclude Include="include\Backends\SDLBackend.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\AudioBackend.h">
+    <ClInclude Include="include\Backends\AudioBackend.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\Backends\PortAudioBackend.h">
@@ -89,7 +89,7 @@
     <ClInclude Include="include\AudioTrack.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\AudioSource.h">
+    <ClInclude Include="include\AudioSources\AudioFile.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\AudioSources\Wav.h">
@@ -116,7 +116,7 @@
     <ClInclude Include="include\VST\VSTPlugin.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
-    <ClInclude Include="include\Effect.h">
+    <ClInclude Include="include\Effects\Effect.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="include\Effects\Filters\IIRFilter.h">

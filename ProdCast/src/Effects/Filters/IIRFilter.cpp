@@ -1,8 +1,8 @@
-#include "Effects/Filters/IIRFilter.h";
+#include "Effects/Filters/IIRFilter.h"
 #include "Logger.h"
 #include "Engine.h"
 
-#define M_PI 3.14
+#define M_PI 3.14f
 
 namespace ProdCast {
 
@@ -10,7 +10,7 @@ namespace ProdCast {
 		m_engine = engine;
 		m_settings = engine->getAudioSettings();
 		m_type = type;
-		m_frequency = 0.0f;
+		m_frequency = 0;
 		m_Q = 1.0f;
 		m_gain = 0.0f;
 		calculateIntermediates();
@@ -24,7 +24,7 @@ namespace ProdCast {
 			m_pastValues[i].ynm2 = 0.0f;
 		}
 	}
-	IIRFilter::IIRFilter(ProdCastEngine* engine, FilterType type, float frequency, float gain, float Q) {
+	IIRFilter::IIRFilter(ProdCastEngine* engine, FilterType type, uint32_t frequency, float gain, float Q) {
 		m_engine = engine;
 		m_settings = engine->getAudioSettings();
 		m_type = type;
@@ -50,8 +50,8 @@ namespace ProdCast {
 
 	void IIRFilter::ProcessBuffer(float* buffer, unsigned int samplesToGo, unsigned int nbChannels) {
 
-		for (int i = 0; i < samplesToGo * nbChannels; i+= nbChannels) {
-			for (int j = 0; j < nbChannels; j++) {
+		for (unsigned int i = 0; i < samplesToGo * nbChannels; i+= nbChannels) {
+			for (unsigned int j = 0; j < nbChannels; j++) {
 				m_pastValues[j].x = buffer[i + j];
 
 				m_pastValues[j].y = (b0 * m_pastValues[j].x
@@ -71,12 +71,12 @@ namespace ProdCast {
 	}
 
 	void IIRFilter::calculateIntermediates() {
-		float A = pow(10, m_gain / 40);
+		float A = powf(10, m_gain / 40);
 		float omega = 2 * M_PI * m_frequency / m_settings->sampleRate;
-		float sn = sin(omega);
-		float cs = cos(omega);
+		float sn = sinf(omega);
+		float cs = cosf(omega);
 		float alpha = sn / (2 * m_Q);
-		float beta = sqrt(A + A);
+		float beta = sqrtf(A + A);
 
 		switch (m_type) {
 		case(LowPass):
@@ -131,12 +131,12 @@ namespace ProdCast {
 
 	}
 
-	void IIRFilter::setFrequency(float frequency) {
+	void IIRFilter::setFrequency(uint32_t frequency) {
 		m_frequency = frequency;
 		calculateIntermediates();
 	}
 
-	float IIRFilter::getFrequency() {
+	uint32_t IIRFilter::getFrequency() {
 		return m_frequency;
 	}
 

@@ -8,7 +8,6 @@ namespace ProdCast {
 		audioSpec.channels = (Uint8)settings->outputChannels;
 		audioSpec.samples = (Uint16)settings->bufferSize;
 
-
 		return E_SUCCESS;
 	}
 

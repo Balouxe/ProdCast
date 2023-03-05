@@ -2,8 +2,6 @@
 Basic implementation of VST handling. 
 Recommended to use for basic audio applications, but has its limits, so consider making your own if you're making a DAW, for instance.
 Main structure and some code taken from @hotwatermorning/Vst3HostDemo
-
-Freak you Steinberg :D
 */
 #pragma once
 
@@ -19,7 +17,8 @@ using WindowHandle = NSView*;
 #endif
 
 #include "Core.h" 
-#include "Effect.h"
+#include "Effects/Effect.h"
+#include "AudioTrack.h"
 
 #include "pluginterfaces/base/fplatform.h"
 #include "pluginterfaces/base/ftypes.h"
@@ -186,7 +185,7 @@ namespace ProdCast {
 		struct PC_API AudioBusesInfo
 		{
 			void Initialize(VSTPluginImplementation* owner, Steinberg::Vst::BusDirection dir);
-			uint32_t GetNumBuses();
+			size_t GetNumBuses();
 
 			BusInfo* GetBusInfo(uint32_t busIndex);
 
@@ -194,8 +193,8 @@ namespace ProdCast {
 
 			uint32_t GetNumActiveChannels();
 
-			bool IsActive(size_t busIndex);
-			void SetActive(size_t busIndex, bool state = true);
+			bool IsActive(uint32_t busIndex);
+			void SetActive(uint32_t busIndex, bool state = true);
 
 			bool SetSpeakerArrangement(size_t busIndex, Steinberg::Vst::SpeakerArrangement arr);
 
@@ -330,7 +329,7 @@ namespace ProdCast {
 			uint32_t GetNumInputs();
 			uint32_t GetNumOutputs();
 
-			uint32_t GetNumParams();
+			size_t GetNumParams();
 			ParameterInfo& GetParameterInfoByIndex(uint32_t index);
 			ParameterInfo& GetParameterInfoByID(Steinberg::Vst::ParamID id);
 
@@ -561,11 +560,11 @@ namespace ProdCast {
 			~VSTPluginFactory();
 
 			VSTPlugin::FactoryInfo& GetFactoryInfo();
-			uint32_t GetComponentCount();
+			size_t GetComponentCount();
 			VSTPlugin::ClassInfo& GetComponentInfo(uint32_t index);
 			VSTPlugin* CreateByIndex(uint32_t index);
 			VSTPlugin* CreateByID(void* componentID);
-			uint32_t GetNumLoadedPlugins();
+			size_t GetNumLoadedPlugins();
 
 			void OnVSTPluginIsCreated(VSTPlugin* plugin);
 
@@ -594,16 +593,28 @@ namespace ProdCast {
 		};
 
 
-		class VSTInstrument {
+		class PC_API VSTInstrument : public AudioTrack {
+		public:
+			VSTInstrument(ProdCast::ProdCastEngine* engine, const char* path = "");
+			~VSTInstrument();
 
+			void LoadInstrument(const char* path);
 
+			void GetNextSamples(float* buffer, unsigned int bufferSize, unsigned int numChannels);
 
+			VSTPlugin* getPlugin();
+		private:
+			VSTPlugin* m_plugin;
+			ProcessInfo::TransportInfo m_TransportInfo;
+			float* m_interleavedBuffer;
+
+			bool m_initialized = false;
+			const char* m_path;
 		};
 
 		class PC_API VSTEffect : public Effect {
 		public:
-			VSTEffect(ProdCast::ProdCastEngine* engine, const char* path);
-			VSTEffect(ProdCast::ProdCastEngine* engine);
+			VSTEffect(ProdCast::ProdCastEngine* engine, const char* path = "");
 			~VSTEffect();
 
 			void LoadEffect(const char* path);
@@ -612,11 +623,9 @@ namespace ProdCast {
 
 			VSTPlugin* getPlugin();
 		private:
-			ProdCastEngine* m_engine;
-			AudioSettings* m_settings;
-
 			VSTPlugin* m_plugin;
 			ProcessInfo::TransportInfo m_TransportInfo;
+			float* m_interleavedBuffer;
 
 			bool m_initialized = false;
 			const char* m_path;

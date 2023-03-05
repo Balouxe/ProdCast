@@ -9,52 +9,87 @@
 #include <string>
 #include <mutex>
 #include <vector>
-#include <unordered_map> // for audio sources
+#include <unordered_map>
 
 namespace ProdCast {
+
 	class PC_API ProdCastEngine {
 	public:
 		// PUBLIC INTERFACE
 
-		ProdCastEngine(unsigned int bufferSize, unsigned int sampleRate, Backends backend);
+		ProdCastEngine(AudioSettings& settings);
 		~ProdCastEngine();
 
-		void AddAudioTrack(AudioTrack* source);
+		struct Stream {
+			Stream() = default;
+			Stream(ProdCastEngine* engine, AudioSettings& settings, uint32_t streamHandle = 0);
+			~Stream();
+			void InitStream(ProdCastEngine* engine, AudioSettings& settings, uint32_t streamHandle = 0);
+
+			AudioSettings settings;
+			AudioBus* bus = nullptr;
+			RingBuffer* ringBuffer = nullptr;
+			void(*inputCallback)(float*, unsigned int, unsigned int) = nullptr;
+			float* outputBuffer;
+			float* inputBuffer;
+			uint32_t streamHandle;
+		};
+
+		struct AuxStreamUserData {
+			ProdCastEngine* engine;
+			uint32_t handle;
+		};
 		
 		void setMasterGain(float gain);
 		inline float getMasterGain() const { return m_masterGain; }
+		
+		void setTempo(uint16_t tempo);
 
-		inline AudioSettings* getAudioSettings() { return &m_audioSettings; }
+		AudioSettings* getAudioSettings(uint32_t streamHandle = 0);
+		inline AudioBus* getMasterBus() { return m_mainStream.bus; }
+
+		// Returns the internal input buffer
+		float* getInputBuffer() const { return m_mainStream.inputBuffer; }		
+
+		// Sets a function that will get called every time an input buffer is given.
+		// This function is called directly in the main audio callback so it must be quickly executed.
+		// Arguments are the buffer, the size of the buffer (divided by the number of channels) and the channel count
+		void SetInputCallback(void(*inputCallback)(float*, unsigned int, unsigned int));
+
+		uint32_t OpenAuxiliaryStream(AudioSettings& settings);
+		void CloseAuxiliaryStream(uint32_t handle);
 
 		// PRIVATE INTERFACE
 
-		inline RingBuffer* getRingBuffer() { return m_ringBuffer; }
+		inline Stream getStreamData() { return m_mainStream; }
 		inline ThreadPool* getPool() const { return m_threadPool; }
-		inline AudioBus* getMasterBus() { return m_masterBus; }
+		
+		int AudioCallback(float* outputBuffer, float* inputBuffer, unsigned long frameCount, uint32_t auxHandle = 0);
 
-		int AudioCallback(float* outputBuffer, float* inputBuffer, unsigned long frameCount);
-
-		void RenderBuffer();
-
-		inline void lockAudioMutex() {	m_audioMutex.lock(); }
-		inline void unlockAudioMutex() { m_audioMutex.unlock(); }
+		void RenderBuffer(uint32_t streamHandle = 0);
 
 	private:
 		std::mutex m_audioMutex;
-		ThreadPool* m_threadPool;
-		AudioBackend* m_backend;
-		AudioBus* m_masterBus;
+		ThreadPool* m_threadPool = nullptr;
+		AudioBackend* m_backend = nullptr;
+		Stream m_mainStream;
 		
-		AudioSettings m_audioSettings;
-
-		RingBuffer* m_ringBuffer;
-		float* m_buffer;
-
-		float m_masterGain;	
-
-		std::string m_audioDeviceName;
-
 		bool isInit = false;
+
+		//AudioBus* m_masterBus;
+		// AudioSettings m_audioSettings;
+		// RingBuffer* m_ringBuffer;
+		// float* m_outputBuffer;
+		// float* m_inputBuffer;
+		// void(*m_inputCallback)(float*, unsigned int, unsigned int) = nullptr;
+
+		float m_masterGain = 1.0f;
+
+		std::string m_inputDeviceName;
+		std::string m_outputDeviceName;
+
+		uint32_t m_auxHandleCount = 1;
+		std::unordered_map<uint32_t, Stream> m_auxStreams;
 	};
 }
 
