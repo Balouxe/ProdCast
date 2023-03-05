@@ -1,6 +1,6 @@
 #pragma once
 #include "Core.h"
-#include "AudioBackend.h"
+#include "Backends/AudioBackend.h"
 #include "AudioThread.h"
 #include "AudioTrack.h"
 #include "AudioBus.h"
@@ -54,7 +54,7 @@ namespace ProdCast {
 		// Sets a function that will get called every time an input buffer is given.
 		// This function is called directly in the main audio callback so it must be quickly executed.
 		// Arguments are the buffer, the size of the buffer (divided by the number of channels) and the channel count
-		void SetInputCallback(void(*inputCallback)(float*, unsigned int, unsigned int));
+		void SetInputCallback(void(*inputCallback)(float*, unsigned int, unsigned int), uint32_t streamHandle = 0);
 
 		uint32_t OpenAuxiliaryStream(AudioSettings& settings);
 		void CloseAuxiliaryStream(uint32_t handle);
@@ -63,6 +63,7 @@ namespace ProdCast {
 
 		inline Stream getStreamData() { return m_mainStream; }
 		inline ThreadPool* getPool() const { return m_threadPool; }
+		Stream& GetStream(uint32_t streamHandle = 0);
 		
 		int AudioCallback(float* outputBuffer, float* inputBuffer, unsigned long frameCount, uint32_t auxHandle = 0);
 
@@ -75,13 +76,6 @@ namespace ProdCast {
 		Stream m_mainStream;
 		
 		bool isInit = false;
-
-		//AudioBus* m_masterBus;
-		// AudioSettings m_audioSettings;
-		// RingBuffer* m_ringBuffer;
-		// float* m_outputBuffer;
-		// float* m_inputBuffer;
-		// void(*m_inputCallback)(float*, unsigned int, unsigned int) = nullptr;
 
 		float m_masterGain = 1.0f;
 

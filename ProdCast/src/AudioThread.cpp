@@ -31,10 +31,10 @@ namespace ProdCast {
 	}
 
 	void ThreadPool::DeInitPool() {
-		std::scoped_lock lock{ m_poolMutex };
+		std::unique_lock lock{ m_poolMutex };
 		m_isRunning = false;
 		m_cv.notify_all();
-		lock.~scoped_lock();
+		lock.~unique_lock();
 		for (int i = 0; i < m_nbThreads; i++) {
 			m_threads[i].Stop();
 		}
@@ -46,7 +46,7 @@ namespace ProdCast {
 	}
 
 	void ThreadPool::addJob(ThreadableJob* job) {
-		std::scoped_lock lock{ m_poolMutex };
+		std::unique_lock lock{ m_poolMutex };
 		if (m_nbThreads == 0) {
 			job->Process();
 			return;

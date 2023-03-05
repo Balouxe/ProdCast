@@ -126,18 +126,18 @@ namespace ProdCast {
 		public:
 			struct TransportInfo {
 				double sampleRate = 44100.0;
+				double ppqBeginPos = 0;
+				double ppqEndPos = 0;
+				double tempo = 120.0;
 
 				uint32_t smpBeginPos = 0;
 				uint32_t smpEndPos = 0;
-				double ppqBeginPos = 0;
-				double ppqEndPos = 0;
-				bool playing = 0;
-				bool loopEnabled = false;
 				uint32_t loopBegin = 0;
 				uint32_t loopEnd = 0;
-				double tempo = 120.0;
 				uint8_t timeSigNumer = 4;
 				uint8_t timeSigDenom = 4;
+				bool playing = 0;
+				bool loopEnabled = false;
 
 				uint32_t GetSmpDuration() const {
 					return smpEndPos - smpBeginPos;
@@ -149,9 +149,9 @@ namespace ProdCast {
 			};
 
 			TransportInfo* timeInfo = nullptr;
-			float* inputBuffer;
-			float* outputBuffer;
-			uint32_t numChannels;
+			float* inputBuffer = nullptr;
+			float* outputBuffer = nullptr;
+			uint32_t numChannels = 0;
 		};
 			
 		class PC_API VSTProcessor {
