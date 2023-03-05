@@ -107,7 +107,7 @@ namespace ProdCast {
 		// todo
 	}
 	ProdCastEngine::Stream& ProdCastEngine::GetStream(uint32_t streamHandle) {
-		if (streamHandle == 0) {
+		if (streamHandle == 0u) {
 			return m_mainStream;
 		}
 		else {

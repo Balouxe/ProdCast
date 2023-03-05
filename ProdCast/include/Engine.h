@@ -30,8 +30,8 @@ namespace ProdCast {
 			AudioBus* bus = nullptr;
 			RingBuffer* ringBuffer = nullptr;
 			void(*inputCallback)(float*, unsigned int, unsigned int) = nullptr;
-			float* outputBuffer;
-			float* inputBuffer;
+			float* outputBuffer = nullptr;
+			float* inputBuffer = nullptr;
 			uint32_t streamHandle;
 		};
 

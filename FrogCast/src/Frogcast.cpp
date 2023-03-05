@@ -60,6 +60,7 @@ int main() {
 
 
 	ProdCast::AudioSettings settings;
+	settings.sampleRate = 48000;
 	settings.audioBackend = ProdCast::BE_PORTAUDIO;
 	ProdCast::ProdCastEngine* engine = new ProdCast::ProdCastEngine(settings);
 	engine->setMasterGain(1.0f);
@@ -68,11 +69,12 @@ int main() {
 	file1.LoadFile("F:/Dev/Projets/ProdCast/bin/Debug-x64/FrogCast/tests/flactest.flac");
 	file1.setVolume(0.5f);
 
-	ProdCast::VST::VSTEffect* effect = new ProdCast::VST::VSTEffect(engine, "C:/Program Files/Common Files/VST3/FabFilter/FabFilter Pro-C 2.vst3");
+	ProdCast::VST::VSTEffect* effect = new ProdCast::VST::VSTEffect(engine, "C:/Program Files/Common Files/VST3/Wider.vst3");
 
 	ProdCast::ProcessingChain* proc = new ProdCast::ProcessingChain(engine);
 	proc->AddEffect(effect, 0);
 	file1.ApplyProcessingChain(proc);
+	file1.AddParent(engine->getMasterBus());
 	file1.Play();
 
 	ProdCast::VST::PlugFrameListener* listener = new windowPlugFrameListener(windowHandle);

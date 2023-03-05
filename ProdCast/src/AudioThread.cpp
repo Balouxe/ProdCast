@@ -78,7 +78,7 @@ namespace ProdCast {
 	void WorkerThread::Work() {
 		while (true) {
 			ThreadableJob* job{};
-			m_parent->getNextJob(job);
+ 			m_parent->getNextJob(job);
 			if (job)
 				job->Process();
 			else

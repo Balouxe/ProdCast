@@ -34,5 +34,4 @@ namespace ProdCast {
 		float* m_buffer;
 };
 
-
 }

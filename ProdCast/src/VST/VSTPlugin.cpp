@@ -1670,6 +1670,7 @@ namespace VST {
 		m_engine = engine;
 		m_settings = engine->getAudioSettings();
 		m_interleavedBuffer = new float[m_settings->outputChannels * m_settings->bufferSize];
+		Init();
 		LoadEffect(path);
 	}
 

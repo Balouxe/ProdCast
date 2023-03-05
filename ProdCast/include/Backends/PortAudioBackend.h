@@ -1,6 +1,5 @@
 #pragma once
 #include "Core.h"
-#include "Engine.h"
 #include "AudioBackend.h"
 
 #include "portaudio.h"
@@ -8,6 +7,8 @@
 #include <unordered_map>
 
 namespace ProdCast {
+
+	class ProdCastEngine;
 
 	class PortAudioBackend : public AudioBackend {
 	public:

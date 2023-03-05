@@ -1,4 +1,5 @@
 #include "Backends/PortAudioBackend.h"
+#include "Engine.h"
 
 #include "Logger.h"
 

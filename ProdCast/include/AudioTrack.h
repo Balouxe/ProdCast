@@ -42,22 +42,22 @@ namespace ProdCast {
 		void CalculateRMS();
 
 		std::mutex m_mutex;
-		AudioBus* m_parent;
+		AudioBus* m_parent = nullptr;
 		uint16_t m_busHandle;
 
-		ProdCastEngine* m_engine;
-		AudioSettings* m_settings;
+		ProdCastEngine* m_engine = nullptr;
+		AudioSettings* m_settings = nullptr;
 
-		ProcessingChain* m_processingChain;
+		ProcessingChain* m_processingChain = nullptr;
 
-		float* m_buffer;
+		float* m_buffer = nullptr;
 
-		float m_volume;
-		float m_pan;
+		float m_volume = 1.0f;
+		float m_pan = 0.0f;
 		float m_gainLeft;
 		float m_gainRight;
 
-		bool m_isMuted;
+		bool m_isMuted = false;
 
 		// RMS
 		uint32_t m_RMSState = 0;

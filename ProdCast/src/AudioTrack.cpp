@@ -78,7 +78,13 @@ namespace ProdCast {
 	}
 
 	void AudioTrack::SetParentWeight(AudioBus* parent, float mix) {
+		std::unique_lock lock{ m_mutex };
 
+		if (m_parent) {
+			m_parent->RemoveTrack(m_busHandle);
+		}
+		m_parent = parent;
+		m_busHandle = m_parent->AddTrack(this);
 	}
 
 	void AudioTrack::setVolume(float volume) {
