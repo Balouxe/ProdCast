@@ -7,8 +7,6 @@ This audio engine currently supports:
 - WAV, MP3, FLAC files loading
 - Simultaneous audio sources and buses playing
 - Processing chains and VST 3
-
-In development :
 - 3D audio
 - Resampling
 
