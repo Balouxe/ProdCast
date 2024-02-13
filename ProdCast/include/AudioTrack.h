@@ -2,6 +2,8 @@
 #include "Core.h"
 #include "AudioThread.h"
 #include "ProcessingChain.h"
+#include "Utils/Vec3.h"
+
 
 namespace ProdCast {
 	class ProdCastEngine;
@@ -32,6 +34,10 @@ namespace ProdCast {
 
 		void SetRMSRefreshRate(uint32_t refreshRate);
 		float* GetRMS();
+
+		void Enable3D(bool enabled = true);
+		void Calculate3D();
+		void Set3DPosition(Vec3 pos);
 
 		void Process();
 		virtual void GetNextSamples(float* buffer, unsigned int bufferSize, unsigned int numChannels) = 0;
@@ -64,5 +70,10 @@ namespace ProdCast {
 		uint32_t m_RMSRate = 735;
 		std::vector<float> m_RMSValues;
 		float* m_RMS;
+
+		// 3D
+		bool m_is3D = false;
+		Vec3 m_speakerPosition = Vec3(0.0f, 0.0f, 0.0f);
+		float m_3DVolumeMultiplier = 1.0f;
 	};
 }

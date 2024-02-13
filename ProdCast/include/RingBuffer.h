@@ -13,6 +13,8 @@ namespace ProdCast {
 
 		void Write(float* writeBuffer);
 		void Read(float* readBuffer);
+
+		void SimulateCrash();
 	private:
 		float* m_buffer;
 		unsigned int m_readPos;
@@ -21,6 +23,8 @@ namespace ProdCast {
 		unsigned int m_sampleSize;
 
 		std::shared_mutex m_mutex;
+
+		bool m_simulateCrash = false;
 	};
 
 }

@@ -5,7 +5,7 @@ Main structure and some code taken from @hotwatermorning/Vst3HostDemo
 */
 #pragma once
 
-#include "Logger.h" // spdlog includes windows.h already
+#include "Utils/Logger.h" // spdlog includes windows.h already
 
 #if defined(_MSC_VER)
 #ifdef PC_NLOG
@@ -20,7 +20,6 @@ using WindowHandle = NSView*;
 #include "Effects/Effect.h"
 #include "AudioTrack.h"
 
-#include "pluginterfaces/base/fplatform.h"
 #include "pluginterfaces/base/ftypes.h"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/gui/iplugview.h"

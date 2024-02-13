@@ -21,7 +21,7 @@ namespace ProdCast {
 		m_RMS = new float[m_settings->outputChannels];
 		m_RMSValues.resize(m_RMSRate * m_settings->outputChannels);
 
-		m_parent = m_engine->getMasterBus();
+		m_parent = m_engine->GetMasterBus();
 		m_busHandle = m_parent->AddTrack(this);
 	}
 
@@ -142,5 +142,46 @@ namespace ProdCast {
 
 	float* AudioTrack::GetRMS() {
 		return m_RMS;
+	}
+
+	void AudioTrack::Enable3D(bool enabled) {
+		if (m_is3D != enabled) {
+			m_is3D = enabled;
+			
+			Calculate3D();
+		}
+
+		if (m_is3D = false) {
+			m_3DVolumeMultiplier = 1.0f;
+		}
+	}
+
+	void AudioTrack::Calculate3D() {
+		Vec3 listenerLookingAt = m_engine->Get3DListenerLookingAt();
+		Vec3 listenerPos = m_engine->Get3DListenerPosition();
+		Vec3 upDirection = m_engine->Get3DUpDirection();
+
+		Vec3 side = Cross(upDirection, listenerLookingAt);
+		Normalize(side);
+		float x = Dot(m_speakerPosition - listenerPos, side);
+		float z = Dot(m_speakerPosition - listenerPos, listenerLookingAt);
+		float angle = atan2f(x, z);
+		float pan = sinf(angle);
+
+		Vec3 relativePos = m_speakerPosition - listenerPos;
+		float distance = sqrtf((relativePos.X * relativePos.X) + (relativePos.Y * relativePos.Y) + (relativePos.Z * relativePos.Z));
+		float thing = 300.0f - distance;
+		float volume = 0.0f;
+		if (thing > 0) {
+			volume = thing / 300.0f;
+		}
+
+		setPan(pan);
+		m_3DVolumeMultiplier = volume;
+	}
+
+	void AudioTrack::Set3DPosition(Vec3 pos) {
+		m_speakerPosition = pos;
+		Calculate3D();
 	}
 }

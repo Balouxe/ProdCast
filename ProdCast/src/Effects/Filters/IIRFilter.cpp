@@ -1,5 +1,5 @@
 #include "Effects/Filters/IIRFilter.h"
-#include "Logger.h"
+#include "Utils/Logger.h"
 #include "Engine.h"
 
 #define M_PI 3.14f
@@ -8,7 +8,7 @@ namespace ProdCast {
 
 	IIRFilter::IIRFilter(ProdCastEngine* engine, FilterType type) {
 		m_engine = engine;
-		m_settings = engine->getAudioSettings();
+		m_settings = engine->GetAudioSettings();
 		m_type = type;
 		m_frequency = 0;
 		m_Q = 1.0f;
@@ -26,7 +26,7 @@ namespace ProdCast {
 	}
 	IIRFilter::IIRFilter(ProdCastEngine* engine, FilterType type, uint32_t frequency, float gain, float Q) {
 		m_engine = engine;
-		m_settings = engine->getAudioSettings();
+		m_settings = engine->GetAudioSettings();
 		m_type = type;
 		m_frequency = frequency;
 		m_Q = Q;

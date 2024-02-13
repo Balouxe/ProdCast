@@ -51,7 +51,13 @@ namespace ProdCast {
 		int outputDevice = -1;
 	};
 
-	// debug, temporary
+
+	struct DeviceInfo {
+		uint32_t id;
+		std::string name;
+	};
+
+	// debug
 #ifdef PC_DEBUG
 	struct Timer {
 		std::chrono::time_point<std::chrono::steady_clock> start, end;

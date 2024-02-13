@@ -1668,7 +1668,7 @@ namespace VST {
 
 	VSTEffect::VSTEffect(ProdCast::ProdCastEngine* engine, const char* path) {
 		m_engine = engine;
-		m_settings = engine->getAudioSettings();
+		m_settings = engine->GetAudioSettings();
 		m_interleavedBuffer = new float[m_settings->outputChannels * m_settings->bufferSize];
 		Init();
 		LoadEffect(path);

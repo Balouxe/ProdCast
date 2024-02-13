@@ -1,6 +1,6 @@
 #include "AudioSources/Wav.h"
 #include "Engine.h"
-#include "Logger.h"
+#include "Utils/Logger.h"
 
 #define DR_WAV_IMPLEMENTATION
 #include "dr_wav.h"

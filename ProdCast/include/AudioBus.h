@@ -13,6 +13,8 @@ namespace ProdCast {
 		AudioBus(ProdCastEngine* engine, uint32_t streamHandle = 0, bool isMaster = false);
 		~AudioBus();
 
+		std::unordered_map<uint16_t, AudioTrack*>& GetTracks();
+
 		void GetNextSamples(float* buffer, unsigned int samplesToGo, unsigned int nbChannels);
 
 		friend class AudioTrack;

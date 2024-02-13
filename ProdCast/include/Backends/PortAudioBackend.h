@@ -37,14 +37,21 @@ namespace ProdCast {
 		PCError OpenAuxiliaryStream(uint32_t handle, AudioSettings& settings);
 		PCError CloseAuxiliaryStream(uint32_t handle);
 
-		std::unordered_map<int, std::string> GetInputDevices();
-		std::unordered_map<int, std::string> GetOutputDevices();
+		std::unordered_map<uint32_t, DeviceInfo> GetInputDevices();
+		std::unordered_map<uint32_t, DeviceInfo> GetOutputDevices();
+
+		void ChangeOutputDevice(uint32_t streamHandle, uint32_t deviceId);
+		void ChangeInputDevice(uint32_t streamHandle, uint32_t deviceId);
+
 	private:
+		PaStream* GetStream(uint32_t handle);
+		PaStreamParameters& GetStreamInputParameters(uint32_t streamHandle = 0u);
+		PaStreamParameters& GetStreamOutputParameters(uint32_t streamHandle = 0u);
+
 		ProdCastEngine* m_engine;
 
 		PaStream* m_mainStream;
-		PaStreamParameters m_mainOutputParameters;
-		PaStreamParameters m_mainInputParameters;
+		PortAudioStreamParameters m_mainParameters;
 
 		std::unordered_map<uint32_t, PaStream*> m_auxStreams;
 		std::unordered_map<uint32_t, PortAudioStreamParameters> m_auxParameters;
