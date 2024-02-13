@@ -8,8 +8,15 @@ This audio engine currently supports:
 - Simultaneous audio sources and buses playing
 - Processing chains and VST 3
 
+In development :
+- 3D audio
+- Resampling
+
+Planned :
+- Audio file streaming (currently only preloading)
+
 ## Why should you use ProdCast ?
-Don't.
+Currently, no reason. Later down the line, the main benefit of this engine will be simplicity of its code (at least that's my goal).
 
 ## Repo structure
 The `ProdCast` folder contains the engine source code. The `FrogCast` folder contains a test Visual Studio solution
