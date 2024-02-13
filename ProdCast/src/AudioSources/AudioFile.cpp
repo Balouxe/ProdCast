@@ -1,15 +1,18 @@
 #include "AudioSources/AudioFile.h"
 #include "Engine.h"
-#include "Logger.h"
+#include "Utils/Logger.h"
 
 #include "AudioSources/Wav.h"
 #include "AudioSources/Mp3.h"
 #include "AudioSources/Flac.h"
 
+#include "Utils/Resampler.h"
+#include "Utils/FFT.h"
+
 namespace ProdCast {
 	AudioFile::AudioFile(ProdCastEngine* engine, uint32_t streamHandle) {
 		m_engine = engine;
-		m_settings = engine->getAudioSettings(streamHandle);
+		m_settings = engine->GetAudioSettings(streamHandle);
 		Init();
 	}
 
@@ -26,24 +29,27 @@ namespace ProdCast {
 			return;
 		}
 
-		memset(m_buffer, 0, nbSamples * nbChannels * sizeof(float));
+		int unSampledNumSamples = int(float((float)nbSamples * ((float)m_sampleRate / (float)m_settings->sampleRate)));
+
+		memset(m_unResampledBuffer, 0, unSampledNumSamples * nbChannels * sizeof(float));
+		memset(m_buffer, 0, nbSamples * nbChannels *  sizeof(float));
 
 		unsigned int i;
 
-		for (i = 0; i < nbSamples * nbChannels; i += m_numChannels) {
+		for (i = 0; i < unSampledNumSamples * nbChannels; i += m_numChannels) {
 			if (m_numChannels == 1 && nbChannels == 1) {
-				m_buffer[i] = m_audioData[m_position++] * m_volume;
+				m_unResampledBuffer[i] = m_audioData[m_position++] * m_volume * m_3DVolumeMultiplier;
 			}
 			else if (m_numChannels == 1 && nbChannels == 2) {
-				m_buffer[i] = m_audioData[m_position] * m_volume * m_gainLeft;
-				m_buffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight;
+				m_unResampledBuffer[i] = m_audioData[m_position] * m_volume * m_gainLeft * m_3DVolumeMultiplier;
+				m_unResampledBuffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight * m_3DVolumeMultiplier;
 			}
 			else if (m_numChannels == 2 && nbChannels == 2) {
-				m_buffer[i] = m_audioData[m_position++] * m_volume * m_gainLeft;
-				m_buffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight;
+				m_unResampledBuffer[i] = m_audioData[m_position++] * m_volume * m_gainLeft * m_3DVolumeMultiplier;
+				m_unResampledBuffer[i + 1] = m_audioData[m_position++] * m_volume * m_gainRight * m_3DVolumeMultiplier;
 			}
 			else if (m_numChannels == 2 && nbChannels == 1) {
-				m_buffer[i] = (m_audioData[m_position++] * m_gainLeft + m_audioData[m_position++] * m_gainRight) / 2 * m_volume;
+				m_unResampledBuffer[i] = (m_audioData[m_position++] * m_gainLeft + m_audioData[m_position++] * m_gainRight) / 2 * m_volume * m_3DVolumeMultiplier;
 			}
 
 			if ((m_position == m_endLoopPoint) && m_isLooping) {
@@ -55,6 +61,8 @@ namespace ProdCast {
 				break;
 			}
 		}
+
+		Resampler::Resample(m_unResampledBuffer, m_buffer, m_sampleRate, m_settings->sampleRate, unSampledNumSamples, nbSamples);
 
 		if (m_processingChain)
 			m_processingChain->ProcessEffects(m_buffer, nbSamples, nbChannels);
@@ -81,12 +89,22 @@ namespace ProdCast {
 				m_isLoaded = true;
 			}
 		}
+
+		delete[] m_unResampledBuffer;
+		int unSampledNumSamples = int(float((float)m_settings->bufferSize * ((float)m_sampleRate / (float)m_settings->sampleRate)));
+		m_unResampledBuffer = new float[(int)(unSampledNumSamples * m_settings->outputChannels)];
+		PC_INFO("Unresampled buffer of {0} samples", (int)(unSampledNumSamples * m_settings->outputChannels));
 	}
 
 	void AudioFile::LoadFileCustom(std::filesystem::path path, bool (*loader)(std::filesystem::path&, float**, unsigned int*, unsigned int*, uint64_t*)) {
 		if (loader(path, &m_audioData, &m_numChannels, &m_sampleRate, &m_length)) {
 			m_isLoaded = true;
 		}
+
+		delete[] m_unResampledBuffer;
+		int unSampledNumSamples = int(float((float)m_settings->bufferSize * ((float)m_sampleRate / (float)m_settings->sampleRate)));
+		m_unResampledBuffer = new float[(int)(unSampledNumSamples * m_settings->outputChannels)];
+		PC_INFO("Unresampled buffer of {0} samples", (int)(unSampledNumSamples * m_settings->outputChannels));
 	}
 
 	void AudioFile::Play(){

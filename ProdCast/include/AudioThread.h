@@ -4,8 +4,6 @@
 #include <queue>
 #include <condition_variable>
 
-#include "Core.h"
-
 namespace ProdCast {
 
 	class WorkerThread;

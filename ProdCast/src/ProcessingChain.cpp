@@ -5,7 +5,7 @@ namespace ProdCast {
 
 	ProcessingChain::ProcessingChain(ProdCastEngine* engine) {
 		m_engine = engine;
-		m_settings = engine->getAudioSettings();
+		m_settings = engine->GetAudioSettings();
 
 		for (int i = 0; i < PC_MAX_EFFECTS; i++) {
 			m_effects[i] = nullptr;
@@ -26,7 +26,8 @@ namespace ProdCast {
 	}
 
 	void ProcessingChain::RemoveEffect(Effect* effect, uint8_t pos) {
-		m_effects[pos] = nullptr;
+		m_effects[pos] = nullptr; // 13.02.2024: Haven't looked at this code for a bit but there is no way in hell that doesn't cause a memory leak??
+		// TODO: investigate
 	}
 
 	void ProcessingChain::SwapEffects(uint8_t from, uint8_t to) {

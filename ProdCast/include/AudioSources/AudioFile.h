@@ -72,6 +72,7 @@ namespace ProdCast {
 
 		unsigned int m_numChannels = 0;
 		uint32_t m_sampleRate = 0;
+		float* m_unResampledBuffer = nullptr;
 
 		bool m_isLoaded = false;
 		bool m_isPlaying = false;

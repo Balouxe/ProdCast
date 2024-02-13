@@ -5,6 +5,7 @@
 #include "AudioTrack.h"
 #include "AudioBus.h"
 #include "RingBuffer.h"
+#include "Utils/Vec3.h"
 
 #include <string>
 #include <mutex>
@@ -25,6 +26,7 @@ namespace ProdCast {
 			Stream(ProdCastEngine* engine, AudioSettings& settings, uint32_t streamHandle = 0);
 			~Stream();
 			void InitStream(ProdCastEngine* engine, AudioSettings& settings, uint32_t streamHandle = 0);
+			AudioSettings& GetAudioSettings();
 
 			AudioSettings settings;
 			AudioBus* bus = nullptr;
@@ -40,13 +42,13 @@ namespace ProdCast {
 			uint32_t handle;
 		};
 		
-		void setMasterGain(float gain);
-		inline float getMasterGain() const { return m_masterGain; }
+		void SetMasterGain(float gain);
+		inline float GetMasterGain() const { return m_masterGain; }
 		
-		void setTempo(uint16_t tempo);
+		void SetTempo(uint16_t tempo);
 
-		AudioSettings* getAudioSettings(uint32_t streamHandle = 0);
-		inline AudioBus* getMasterBus() { return m_mainStream.bus; }
+		AudioSettings* GetAudioSettings(uint32_t streamHandle = 0u);
+		AudioBus* GetMasterBus(uint32_t streamHandle = 0u);
 
 		// Returns the internal input buffer
 		float* getInputBuffer() const { return m_mainStream.inputBuffer; }		
@@ -59,6 +61,20 @@ namespace ProdCast {
 		uint32_t OpenAuxiliaryStream(AudioSettings& settings);
 		void CloseAuxiliaryStream(uint32_t handle);
 
+		std::unordered_map<uint32_t, DeviceInfo> GetOutputDevices();
+		std::unordered_map<uint32_t, DeviceInfo> GetInputDevices();
+
+		void SetOutputDevice(uint32_t streamHandle, uint32_t deviceId);
+		void SetInputDevice(uint32_t streamHandle, uint32_t deviceId);
+
+		void Enable3D(bool enabled = true);
+		void Set3DListenerPosition(float X, float Y, float Z);
+		void Set3DListenerLookingAt(float X, float Y, float Z);
+		void Set3DUpDirection(float X, float Y, float Z);
+
+		// Debug and testing
+		void TestRingBufferCrash();
+
 		// PRIVATE INTERFACE
 
 		inline Stream getStreamData() { return m_mainStream; }
@@ -68,6 +84,10 @@ namespace ProdCast {
 		int AudioCallback(float* outputBuffer, float* inputBuffer, unsigned long frameCount, uint32_t auxHandle = 0);
 
 		void RenderBuffer(uint32_t streamHandle = 0);
+
+		Vec3& Get3DListenerPosition();
+		Vec3& Get3DListenerLookingAt();
+		Vec3& Get3DUpDirection();
 
 	private:
 		std::mutex m_audioMutex;
@@ -84,6 +104,12 @@ namespace ProdCast {
 
 		uint32_t m_auxHandleCount = 1;
 		std::unordered_map<uint32_t, Stream> m_auxStreams;
+
+		// 3D
+		bool m_enable3D = false;
+		Vec3 m_listenerPosition = Vec3(0.0f, 0.0f, 0.0f);
+		Vec3 m_listenerLookingAt = Vec3(1.0f, 0.0f, 0.0f);
+		Vec3 m_listenerUpDirection = Vec3(0.0f, 0.0f, 1.0f);
 	};
 }
 

@@ -1,5 +1,5 @@
 #include "Effects/Effect.h"
-#include "Logger.h"
+#include "Utils/Logger.h"
 
 namespace ProdCast {
 

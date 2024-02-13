@@ -1,7 +1,7 @@
 #include "Backends/PortAudioBackend.h"
 #include "Engine.h"
 
-#include "Logger.h"
+#include "Utils/Logger.h"
 
 #include <iostream>
 #include <memory>
@@ -11,24 +11,25 @@ namespace ProdCast {
 		m_engine = engine;
 
 		Pa_Initialize();
-
-		m_mainOutputParameters.device = Pa_GetDefaultOutputDevice();
-		m_mainOutputParameters.channelCount = 2; // to fix
-		settings->outputChannels = m_mainOutputParameters.channelCount;
-		m_mainOutputParameters.hostApiSpecificStreamInfo = NULL;
-		m_mainOutputParameters.sampleFormat = paFloat32;
-		m_mainOutputParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainOutputParameters.device)->defaultLowOutputLatency;
-		settings->headRoom = (settings->sampleRate / settings->bufferSize) * m_mainOutputParameters.suggestedLatency;
+			
+		m_mainParameters.output.device = Pa_GetDefaultOutputDevice();
+		m_mainParameters.output.channelCount = 2; // to fix
+		settings->outputChannels = m_mainParameters.output.channelCount;
+		m_mainParameters.output.hostApiSpecificStreamInfo = NULL;
+		m_mainParameters.output.sampleFormat = paFloat32;
+		m_mainParameters.output.suggestedLatency = Pa_GetDeviceInfo(m_mainParameters.output.device)->defaultLowOutputLatency;
+		settings->headRoom = (settings->sampleRate / settings->bufferSize) * m_mainParameters.output.suggestedLatency;
 		
-		m_mainInputParameters.device = Pa_GetDefaultInputDevice();
-		m_mainInputParameters.channelCount = Pa_GetDeviceInfo(m_mainInputParameters.device)->maxInputChannels;
-		settings->inputChannels = m_mainInputParameters.channelCount;
-		m_mainInputParameters.hostApiSpecificStreamInfo = NULL;
-		m_mainInputParameters.sampleFormat = paFloat32;
-		m_mainInputParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainInputParameters.device)->defaultLowInputLatency;
+		m_mainParameters.input.device = Pa_GetDefaultInputDevice();
+		m_mainParameters.input.channelCount = Pa_GetDeviceInfo(m_mainParameters.input.device)->maxInputChannels;
+		settings->inputChannels = m_mainParameters.input.channelCount;
+		m_mainParameters.input.hostApiSpecificStreamInfo = NULL;
+		m_mainParameters.input.sampleFormat = paFloat32;
+		m_mainParameters.input.suggestedLatency = Pa_GetDeviceInfo(m_mainParameters.input.device)->defaultLowInputLatency;
 
-		if (Pa_OpenStream(&m_mainStream, &m_mainInputParameters, &m_mainOutputParameters, settings->sampleRate, settings->bufferSize, paClipOff, RenderPortAudioMain, (void*)engine) != 0)
+		if (Pa_OpenStream(&m_mainStream, &m_mainParameters.input, &m_mainParameters.output, settings->sampleRate, settings->bufferSize, paClipOff, RenderPortAudioMain, (void*)engine) != 0)
 		{
+			PC_ERROR("Couldn't open stream !");
 			Pa_Terminate();
 			return E_UNKNOWNERROR;
 		}
@@ -56,18 +57,18 @@ namespace ProdCast {
 		outputParameters.channelCount = 2; // to fix
 		outputParameters.hostApiSpecificStreamInfo = NULL;
 		outputParameters.sampleFormat = paFloat32;
-		outputParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainOutputParameters.device)->defaultLowOutputLatency;
+		outputParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainParameters.output.device)->defaultLowOutputLatency;
 		
-		settings.outputChannels = m_mainOutputParameters.channelCount;
-		settings.headRoom = (settings.sampleRate / settings.bufferSize) * m_mainOutputParameters.suggestedLatency;
+		settings.outputChannels = m_mainParameters.output.channelCount;
+		settings.headRoom = (settings.sampleRate / settings.bufferSize) * m_mainParameters.output.suggestedLatency;
 
 		inputParameters.device = Pa_GetDefaultInputDevice();
-		inputParameters.channelCount = Pa_GetDeviceInfo(m_mainInputParameters.device)->maxInputChannels;
+		inputParameters.channelCount = Pa_GetDeviceInfo(m_mainParameters.input.device)->maxInputChannels;
 		inputParameters.hostApiSpecificStreamInfo = NULL;
 		inputParameters.sampleFormat = paFloat32;
-		inputParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainInputParameters.device)->defaultLowInputLatency;
+		inputParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainParameters.input.device)->defaultLowInputLatency;
 
-		settings.inputChannels = m_mainInputParameters.channelCount;
+		settings.inputChannels = m_mainParameters.input.channelCount;
 
 		std::shared_ptr<ProdCastEngine::AuxStreamUserData> userData = std::make_shared<ProdCastEngine::AuxStreamUserData>();
 		userData->engine = m_engine;
@@ -102,34 +103,153 @@ namespace ProdCast {
 		return E_SUCCESS;
 	}
 
-	std::unordered_map<int, std::string> PortAudioBackend::GetInputDevices() {
-		std::unordered_map<int, std::string> map;
+	std::unordered_map<uint32_t, DeviceInfo> PortAudioBackend::GetInputDevices() {
+		std::unordered_map<uint32_t, DeviceInfo> map;
 		int deviceCount = Pa_GetDeviceCount();
 		const PaDeviceInfo* temp;
 		PC_TRACE("Input devices:");
 		for (int i = 0; i < deviceCount; i++) {
 			temp = Pa_GetDeviceInfo(i);
 			if (temp->maxInputChannels > 0) {
-				map[i] = temp->name;
+				map[i] = DeviceInfo(i ,temp->name);
 				PC_TRACE("- {0} ({1})", temp->name, i);
 			}
 		}
 		return map;
 	}
 
-	std::unordered_map<int, std::string> PortAudioBackend::GetOutputDevices() {
-		std::unordered_map<int, std::string> map;
+	std::unordered_map<uint32_t, DeviceInfo> PortAudioBackend::GetOutputDevices() {
+		std::unordered_map<uint32_t, DeviceInfo> map;
 		int deviceCount = Pa_GetDeviceCount();
 		const PaDeviceInfo* temp;
 		PC_TRACE("Output devices:");
 		for (int i = 0; i < deviceCount; i++) {
 			temp = Pa_GetDeviceInfo(i);
 			if (temp->maxOutputChannels > 0) {
-				map[i] = temp->name;
+				map[i] = DeviceInfo(i, temp->name);
 				PC_TRACE("- {0} ({1})", temp->name, i);
 			}
 		}
 		return map;
+	}
+
+	PaStream* PortAudioBackend::GetStream(uint32_t handle) {
+		if (handle == 0u) {
+			return m_mainStream;
+		}
+		else {
+			return m_auxStreams[handle];
+		}
+	}
+
+	PaStreamParameters& PortAudioBackend::GetStreamInputParameters(uint32_t handle) {
+		if (handle == 0u) {
+			return m_mainParameters.input;
+		}
+		else {
+			return m_auxParameters[handle].input;
+		}
+	}
+
+	PaStreamParameters& PortAudioBackend::GetStreamOutputParameters(uint32_t handle) {
+		if (handle == 0u) {
+			return m_mainParameters.output;
+		}
+		else {
+			return m_auxParameters[handle].output;
+		}
+	}
+
+	void PortAudioBackend::ChangeOutputDevice(uint32_t streamHandle, uint32_t deviceId) {
+		PaStream* stream = GetStream(streamHandle);
+
+		Pa_StopStream(stream);
+		Pa_CloseStream(stream);
+
+		PaStreamParameters newStreamParameters;
+		newStreamParameters.device = deviceId;
+		newStreamParameters.channelCount = 2; // to fix
+		newStreamParameters.hostApiSpecificStreamInfo = NULL;
+		newStreamParameters.sampleFormat = paFloat32;
+		newStreamParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainParameters.output.device)->defaultLowOutputLatency;
+
+		AudioSettings& settings = m_engine->GetStream(streamHandle).GetAudioSettings();
+
+		settings.outputChannels = newStreamParameters.channelCount;
+		settings.headRoom = (settings.sampleRate / settings.bufferSize) * newStreamParameters.suggestedLatency;
+
+		if (streamHandle == 0u) {
+			m_mainParameters.output = newStreamParameters;
+
+			if (Pa_OpenStream(&stream, &GetStreamInputParameters(), &GetStreamOutputParameters(), settings.sampleRate, settings.bufferSize, paClipOff, RenderPortAudioMain, (void*)m_engine) != 0)
+			{
+				Pa_Terminate();
+				PC_ERROR("Couldn't start PortAudio stream !");
+				return;
+			}
+		}
+		else {
+			std::shared_ptr<ProdCastEngine::AuxStreamUserData> userData = std::make_shared<ProdCastEngine::AuxStreamUserData>();
+			userData->engine = m_engine;
+			userData->handle = streamHandle;
+
+			m_auxParameters[streamHandle].output = newStreamParameters;
+
+			if (Pa_OpenStream(&stream, &GetStreamInputParameters(streamHandle), &GetStreamOutputParameters(streamHandle), settings.sampleRate, settings.bufferSize, paClipOff, RenderPortAudioAux, (void*)userData.get()) != 0)
+			{
+				Pa_Terminate();
+				PC_ERROR("Couldn't start PortAudio stream !");
+				return;
+			}
+		}
+
+		Pa_StartStream(m_mainStream);
+	}
+
+	void PortAudioBackend::ChangeInputDevice(uint32_t streamHandle, uint32_t deviceId) {
+		PaStream* stream = GetStream(streamHandle);
+
+		Pa_StopStream(stream);
+		Pa_CloseStream(stream);
+
+		PaStreamParameters newStreamParameters;
+		newStreamParameters.device = deviceId;
+		newStreamParameters.channelCount = 2; // to fix
+		newStreamParameters.hostApiSpecificStreamInfo = NULL;
+		newStreamParameters.sampleFormat = paFloat32;
+		newStreamParameters.suggestedLatency = Pa_GetDeviceInfo(m_mainParameters.input.device)->defaultLowInputLatency;
+
+		AudioSettings& settings = m_engine->GetStream(streamHandle).GetAudioSettings();
+
+		settings.inputChannels = newStreamParameters.channelCount;
+		settings.headRoom = (settings.sampleRate / settings.bufferSize) * newStreamParameters.suggestedLatency;
+
+		if (streamHandle == 0u) {
+			m_mainParameters.input = newStreamParameters;
+
+			if (Pa_OpenStream(&stream, &GetStreamInputParameters(), &GetStreamOutputParameters(), settings.sampleRate, settings.bufferSize, paClipOff, RenderPortAudioMain, (void*)m_engine) != 0)
+			{
+				Pa_Terminate();
+				PC_ERROR("Couldn't start PortAudio stream !");
+				return;
+			}
+		}
+		else {
+			m_auxParameters[streamHandle].input = newStreamParameters;
+
+			std::shared_ptr<ProdCastEngine::AuxStreamUserData> userData = std::make_shared<ProdCastEngine::AuxStreamUserData>();
+			userData->engine = m_engine;
+			userData->handle = streamHandle;
+
+			if (Pa_OpenStream(&stream, &GetStreamInputParameters(streamHandle), &GetStreamOutputParameters(streamHandle), settings.sampleRate, settings.bufferSize, paClipOff, RenderPortAudioAux, (void*)userData.get()) != 0)
+			{
+				Pa_Terminate();
+				PC_ERROR("Couldn't start PortAudio stream !");
+				return;
+			}
+		}
+
+		Pa_StartStream(m_mainStream);
 	}
 
 	int PortAudioBackend::RenderPortAudioMain(const void* input,
