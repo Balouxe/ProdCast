@@ -6,6 +6,47 @@
 #include <thread>
 #include <iostream>
 #include <windows.h>
+#include "Utils/Vec3.h"
+
+using namespace std::chrono_literals;
+
+int main() {
+
+	ProdCast::AudioSettings settings;
+	settings.sampleRate = 44100; // Desired sample rate, TODO: choose the sample rate automatically according to the system's
+	settings.bufferSize = 256; // Desired buffer size, lower equals lower latency but also potentially more lag. Recommended: from 256 to 4096
+	settings.audioBackend = ProdCast::BE_PORTAUDIO; // Desired audio backend, currently only supports PortAudio
+	ProdCast::ProdCastEngine* engine = new ProdCast::ProdCastEngine(settings); // Instantiate the engine with the settings
+	engine->SetMasterGain(1.0f);
+	engine->GetMasterBus()->Enable3D();
+	ProdCast::AudioFile file1(engine); // Create an audio file object
+	file1.LoadFile("F:/Dev/Projets/ProdCast/bin/Debug-x64/FrogCast/poumpoumtchack2.mp3"); // Preload the file with its absolute path
+	file1.setVolume(0.5f);
+	file1.Enable3D();
+	file1.Set3DPosition(ProdCast::Vec3(15.0f, 0.0f, 2.0f)); // In front of the listener
+
+	ProdCast::ProcessingChain* proc = new ProdCast::ProcessingChain(engine); // Create a processing chain to add effects
+	file1.ApplyProcessingChain(proc); // Apply the processing chain to the audio file
+
+	file1.Play(); // Start playing the sound
+
+	std::this_thread::sleep_for(3s);
+
+	file1.Set3DPosition(ProdCast::Vec3(15.0f, 80.0f, 2.0f)); // Move the audio source to the right of the listener
+
+	std::this_thread::sleep_for(90s);
+}
+
+
+
+
+
+
+
+
+
+
+/*
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 
@@ -61,25 +102,26 @@ int main() {
 
 	ProdCast::AudioSettings settings;
 	settings.sampleRate = 48000;
+	settings.bufferSize = 256;
 	settings.audioBackend = ProdCast::BE_PORTAUDIO;
 	ProdCast::ProdCastEngine* engine = new ProdCast::ProdCastEngine(settings);
-	engine->setMasterGain(1.0f);
+	engine->SetMasterGain(1.0f);
 
 	ProdCast::AudioFile file1(engine);
-	file1.LoadFile("F:/Dev/Projets/ProdCast/bin/Debug-x64/FrogCast/tests/flactest.flac");
+	file1.LoadFile("F:/Dev/Projets/ProdCast/bin/Debug-x64/FrogCast/poumpoumtchack2.mp3");
 	file1.setVolume(0.5f);
 
-	ProdCast::VST::VSTEffect* effect = new ProdCast::VST::VSTEffect(engine, "C:/Program Files/Common Files/VST3/Wider.vst3");
+	//ProdCast::VST::VSTEffect* effect = new ProdCast::VST::VSTEffect(engine, "C:/Program Files/Common Files/VST3/TR5 Classic EQ.vst3");
 
 	ProdCast::ProcessingChain* proc = new ProdCast::ProcessingChain(engine);
-	proc->AddEffect(effect, 0);
+	//proc->AddEffect(effect, 0);
 	file1.ApplyProcessingChain(proc);
-	file1.AddParent(engine->getMasterBus());
 	file1.Play();
 
 	ProdCast::VST::PlugFrameListener* listener = new windowPlugFrameListener(windowHandle);
-	effect->getPlugin()->OpenEditor(windowHandle, listener);
+	// effect->getPlugin()->OpenEditor(windowHandle, listener);
 
+	std::this_thread::sleep_for(3s);
 
 	MSG messages;
 	while (GetMessage(&messages, NULL, 0, 0) > 0)
@@ -87,7 +129,6 @@ int main() {
 		TranslateMessage(&messages);
 		DispatchMessage(&messages);
 	}
-	using namespace std::chrono_literals;
 	std::this_thread::sleep_for(90s);
 	DeleteObject(windowHandle); //doing it just in case
 	return messages.wParam;
@@ -108,4 +149,4 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	default:
 		return DefWindowProc(hwnd, message, wparam, lparam);
 	}
-}
+}*/
